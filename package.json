@@ -1,0 +1,30 @@
+{
+  "name": "bcop-penetrator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.13.1",
+  "dependencies": {
+    "autoprefixer": "^10.4.21",
+    "jspdf": "^3.0.1",
+    "openai": "^5.9.0",
+    "pdfmake": "^0.2.20",
+    "postcss": "^8.5.6",
+    "zustand": "^5.0.6"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.31.0",
+    "@types/node": "^24.0.13",
+    "@types/pdfmake": "^0.2.11",
+    "@vitest/ui": "^3.2.4",
+    "eslint": "^9.31.0",
+    "tailwindcss": "^4.1.11",
+    "vitest": "^3.2.4"
+  }
+}
