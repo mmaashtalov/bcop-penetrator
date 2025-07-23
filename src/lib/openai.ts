@@ -59,11 +59,16 @@ async function retryWithBackoff<T>(
   throw lastError;
 }
 
-export async function callGPT(prompt: string) {
+import { sanitize } from "./anonymizer";
+
+export async function callGPT(prompt: string, opts:any={}) {
   return retryWithBackoff(async () => {
     const r = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
-      messages: [{ role: 'user', content: prompt }]
+      messages: prompt.startsWith("[")
+        ? opts.messages
+        : [{ role:"user", content:sanitize(prompt) }],
+      ...opts
     });
     return r.choices[0].message.content;
   });
@@ -79,7 +84,7 @@ export async function callGPTWithSystem(
       model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: system },
-        { role: 'user', content: user }
+        { role: 'user', content: sanitize(user) }
       ],
       ...opts
     });
