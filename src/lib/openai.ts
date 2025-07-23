@@ -2,12 +2,14 @@ import OpenAI from 'openai';
 
 // Проверяем наличие API ключа
 const apiKey = import.meta.env.VITE_OPENAI_KEY;
+// console.log('🔑 Loaded API Key:', apiKey); // Temporary debug log
 if (!apiKey || apiKey === 'your-api-key-here') {
   console.warn('⚠️ OpenAI API key not configured. Please set VITE_OPENAI_KEY in .env file');
 }
 
 export const openai = new OpenAI({ 
   apiKey: apiKey || 'sk-placeholder-key-for-development',
+  baseURL: 'https://api.openai.com/v1',
   dangerouslyAllowBrowser: true,
   timeout: 30 * 1000, // Увеличиваем таймаут до 30 секунд
   maxRetries: 0,      // Отключаем встроенные retry, используем свои
