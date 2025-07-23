@@ -1,7 +1,10 @@
 import OpenAI from 'openai';
+
 export const openai = new OpenAI({ 
-  apiKey: import.meta.env.VITE_OPENAI_KEY || 'your-api-key-here',
+  apiKey: import.meta.env.VITE_OPENAI_KEY || process.env.OPENAI_API_KEY || 'your-api-key-here',
   dangerouslyAllowBrowser: true,
+  timeout: 30 * 1000, // Увеличиваем таймаут до 30 секунд
+  maxRetries: 2,      // Добавляем 2 повторные попытки
 });
 
 export async function callGPT(prompt: string) {

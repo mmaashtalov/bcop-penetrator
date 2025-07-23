@@ -11,10 +11,12 @@ export default function ThreePanelDashboard() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [expandedAnalysis, setExpandedAnalysis] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const handleAnalyze = async () => {
     if (!inputText.trim()) return;
 
+    setError(null);
     setIsAnalyzing(true);
     try {
       const analysis = await analyzeMessage(inputText);
@@ -29,10 +31,22 @@ export default function ThreePanelDashboard() {
       addMessage(newMessage);
       setInputText('');
       
-      // Автоматически генерируем ответы
       await handleGenerateResponses(newMessage);
-    } catch (error) {
-      console.error('Error during analysis:', error);
+    } catch (err: any) {
+      console.error('Error during analysis:', err);
+      let errorMessage = 'Ошибка анализа';
+      
+      if (err.message?.includes('ERR_TIMED_OUT') || err.message?.includes('timeout')) {
+        errorMessage = '⏱️ Таймаут соединения. Повторите попытку через несколько секунд.';
+      } else if (err.message?.includes('ERR_CONNECTION_CLOSED') || err.message?.includes('Connection error')) {
+        errorMessage = '🔌 Соединение прервано. Проверьте интернет и попробуйте снова.';
+      } else if (err.message?.includes('Failed to fetch')) {
+        errorMessage = '🌐 Проблема с сетью. Убедитесь, что интернет работает.';
+      } else {
+        errorMessage = `❌ ${err.message}`;
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsAnalyzing(false);
     }
@@ -47,8 +61,9 @@ export default function ThreePanelDashboard() {
       });
 
       updateMessage(message.id, { responses });
-    } catch (error) {
-      console.error('Error generating responses:', error);
+    } catch (err: any) {
+      console.error('Error generating responses:', err);
+      setError(`Ошибка генерации ответов: ${err.message}`);
     } finally {
       setIsGenerating(false);
     }
@@ -56,7 +71,6 @@ export default function ThreePanelDashboard() {
 
   const handleUseResponse = (response: string) => {
     setInputText(response);
-    // Автоматически скроллим к input
     document.getElementById('message-input')?.focus();
   };
 
@@ -70,7 +84,6 @@ export default function ThreePanelDashboard() {
       backgroundColor: '#f3f4f6'
     }}>
       
-      {/* Левая панель - История сообщений */}
       <div style={{ 
         backgroundColor: 'white', 
         borderRadius: '8px', 
@@ -83,7 +96,20 @@ export default function ThreePanelDashboard() {
           📝 История анализов
         </h2>
 
-        {/* Форма ввода */}
+        {error && (
+          <div style={{
+            padding: '12px',
+            backgroundColor: '#fee2e2',
+            border: '1px solid #fca5a5',
+            borderRadius: '6px',
+            color: '#b91c1c',
+            marginBottom: '16px',
+            fontSize: '14px',
+          }}>
+            {error}
+          </div>
+        )}
+
         <div style={{ marginBottom: '16px' }}>
           <textarea
             id="message-input"
@@ -120,7 +146,6 @@ export default function ThreePanelDashboard() {
           </button>
         </div>
 
-        {/* История сообщений */}
         <div>
           {messages.length === 0 ? (
             <p style={{ color: '#6b7280', fontStyle: 'italic', textAlign: 'center' }}>
@@ -158,7 +183,6 @@ export default function ThreePanelDashboard() {
         </div>
       </div>
 
-      {/* Центральная панель - Анализ */}
       <div style={{ 
         backgroundColor: 'white', 
         borderRadius: '8px', 
@@ -230,7 +254,6 @@ export default function ThreePanelDashboard() {
         )}
       </div>
 
-      {/* Правая панель - Варианты ответов */}
       <div style={{ 
         backgroundColor: 'white', 
         borderRadius: '8px', 
