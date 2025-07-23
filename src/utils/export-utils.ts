@@ -3,6 +3,11 @@ import { DialogSession, DialogMessage } from '../store/useDialogHistory';
 
 // Экспорт диалога в PDF
 export function exportDialogToPDF(session: DialogSession) {
+  if (!session || !session.messages) {
+    console.warn('No session data to export');
+    return;
+  }
+  
   const doc = new jsPDF();
   const pageHeight = doc.internal.pageSize.height;
   let yPosition = 20;
@@ -33,12 +38,12 @@ export function exportDialogToPDF(session: DialogSession) {
     const author = getAuthorLabel(message.author);
     
     // Заголовок сообщения
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text(`${index + 1}. [${timestamp}] ${author}:`, 20, yPosition);
     yPosition += lineHeight;
     
     // Текст сообщения
-    doc.setFont(undefined, 'normal');
+    doc.setFont('helvetica', 'normal');
     const lines = doc.splitTextToSize(message.text, maxLineWidth);
     lines.forEach((line: string) => {
       if (yPosition > pageHeight - 20) {
@@ -52,7 +57,7 @@ export function exportDialogToPDF(session: DialogSession) {
     // Анализ (если есть)
     if (message.analysis && message.author === 'collector') {
       yPosition += 3;
-      doc.setFont(undefined, 'italic');
+      doc.setFont('helvetica', 'italic');
       doc.setFontSize(8);
       doc.text('📊 Анализ:', 25, yPosition);
       yPosition += 5;
@@ -65,7 +70,7 @@ export function exportDialogToPDF(session: DialogSession) {
     // Ответы ассистента (если есть)
     if (message.responses) {
       yPosition += 3;
-      doc.setFont(undefined, 'italic');
+      doc.setFont('helvetica', 'italic');
       doc.setFontSize(8);
       doc.text('🤖 Предложенные ответы:', 25, yPosition);
       yPosition += 5;

@@ -1,7 +1,13 @@
 import OpenAI from 'openai';
 
+// Проверяем наличие API ключа
+const apiKey = import.meta.env.VITE_OPENAI_KEY;
+if (!apiKey || apiKey === 'your-api-key-here') {
+  console.warn('⚠️ OpenAI API key not configured. Please set VITE_OPENAI_KEY in .env file');
+}
+
 export const openai = new OpenAI({ 
-  apiKey: import.meta.env.VITE_OPENAI_KEY || process.env.OPENAI_API_KEY || 'your-api-key-here',
+  apiKey: apiKey || 'sk-placeholder-key-for-development',
   dangerouslyAllowBrowser: true,
   timeout: 30 * 1000, // Увеличиваем таймаут до 30 секунд
   maxRetries: 0,      // Отключаем встроенные retry, используем свои
@@ -25,11 +31,15 @@ async function retryWithBackoff<T>(
       if (error?.status) {
         console.log(`🔍 OpenAI API Error - Status: ${error.status}, Attempt: ${attempt + 1}/${maxRetries + 1}`);
         
-        if (error.status === 429) {
+        if (error.status === 401) {
+          console.error('🔑 Unauthorized (401) - неверный или отсутствующий API ключ');
+        } else if (error.status === 429) {
           console.log('⚠️ Rate limit exceeded (429) - возможно закончились токены или превышен лимит запросов');
         } else if (error.status >= 500) {
           console.log('💥 Server error (5xx) - проблемы на стороне OpenAI');
         }
+      } else if (error?.message) {
+        console.log(`🌐 Network Error: ${error.message}`);
       }
       
       // Если это последняя попытка, выбрасываем ошибку

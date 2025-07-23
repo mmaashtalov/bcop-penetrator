@@ -174,16 +174,22 @@ export function getNextMessageRecommendations(goal: GoalType, conversationHistor
 
 // Адаптация анализа под цель
 export function adaptAnalysisForGoal(rawAnalysis: any, goal: GoalType): any {
-  const strategy = GOAL_STRATEGIES[goal];
-  
-  // Добавляем специфичные для цели метрики
-  const adaptedAnalysis = {
-    ...rawAnalysis,
-    goalStrategy: strategy.name,
-    goalAlignment: analyzeGoalAlignment(rawAnalysis.originalMessage || '', goal),
-    recommendations: getNextMessageRecommendations(goal, []),
-    strategicOpportunities: []
-  };
+  try {
+    const strategy = GOAL_STRATEGIES[goal];
+    
+    if (!strategy) {
+      console.warn(`Unknown goal type: ${goal}`);
+      return rawAnalysis;
+    }
+    
+    // Добавляем специфичные для цели метрики
+    const adaptedAnalysis = {
+      ...rawAnalysis,
+      goalStrategy: strategy.name,
+      goalAlignment: analyzeGoalAlignment(rawAnalysis.originalMessage || '', goal),
+      recommendations: getNextMessageRecommendations(goal, []),
+      strategicOpportunities: []
+    };
   
   // Специфичные возможности для каждой цели
   switch (goal) {
@@ -207,4 +213,8 @@ export function adaptAnalysisForGoal(rawAnalysis: any, goal: GoalType): any {
   }
   
   return adaptedAnalysis;
+  } catch (error) {
+    console.error('Error adapting analysis for goal:', error);
+    return rawAnalysis;
+  }
 }

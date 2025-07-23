@@ -10,7 +10,7 @@ export function DialogSidebar() {
     setCurrentSession,
     deleteSession,
     clearHistory,
-    updateSessionGoal
+    updateSessionGoal: _updateSessionGoal
   } = useDialogHistory();
 
   const [isExpanded, setIsExpanded] = useState(false);
@@ -51,10 +51,9 @@ export function DialogSidebar() {
     }
   };
 
+  // Возвращаем к Tailwind классам
   return (
-    <div className={`bg-white border-r border-gray-200 transition-all duration-300 ${
-      isExpanded ? 'w-80' : 'w-16'
-    }`}>
+    <div className={`bg-white border-r border-gray-200 transition-all duration-300 ${isExpanded ? 'w-80' : 'w-16'}`}>
       <div className="h-full flex flex-col">
         {/* Header */}
         <div className="p-4 border-b border-gray-200">
@@ -75,6 +74,7 @@ export function DialogSidebar() {
           </button>
         </div>
 
+        {/* Остальной код остается без изменений */}
         {isExpanded && (
           <>
             {/* Goals Section */}

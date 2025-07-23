@@ -3,7 +3,7 @@ import { useMessageStore } from '@/store/messageStore';
 import { useDialogHistory } from '@/store/useDialogHistory';
 import { analyzeMessage } from '@/analysis/analysis-engine-core';
 import { generateResponses } from '@/analysis/response-generator';
-import { getGoalModifiedSystemPrompt, getStyleModifiedPrompt, adaptAnalysisForGoal } from '@/goal-engine';
+import { adaptAnalysisForGoal } from '@/goal-engine';
 import ResponseSelect from './ResponseSelect';
 import { AnalysisMessage } from '@/types/response';
 
@@ -27,6 +27,23 @@ export default function ThreePanelDashboard() {
       createSession('defensive'); // Создаем защитную сессию по умолчанию
     }
   }, [currentSession, createSession]);
+
+  // Показываем загрузку пока сессия не создана
+  if (!currentSession) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        minHeight: '100vh',
+        backgroundColor: '#f3f4f6'
+      }}>
+        <div style={{ textAlign: 'center', padding: '32px' }}>
+          <p style={{ color: '#2563eb', fontWeight: '500' }}>🔄 Инициализация системы анализа...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleAnalyze = async () => {
     if (!inputText.trim() || !currentSession) return;
@@ -62,7 +79,9 @@ export default function ThreePanelDashboard() {
       console.error('Error during analysis:', err);
       let errorMessage = 'Ошибка анализа';
       
-      if (err.message?.includes('ERR_TIMED_OUT') || err.message?.includes('timeout')) {
+      if (err.status === 401) {
+        errorMessage = '🔑 Ошибка авторизации: Проверьте API ключ OpenAI в файле .env';
+      } else if (err.message?.includes('ERR_TIMED_OUT') || err.message?.includes('timeout')) {
         errorMessage = '⏱️ Таймаут соединения. Повторите попытку через несколько секунд.';
       } else if (err.message?.includes('ERR_CONNECTION_CLOSED') || err.message?.includes('Connection error')) {
         errorMessage = '🔌 Соединение прервано. Проверьте интернет и попробуйте снова.';
