@@ -8,5 +8,8 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src')
     }
+  },
+  build: {
+    sourcemap: false // Убираем source-map warnings в продакшене
   }
 }) 

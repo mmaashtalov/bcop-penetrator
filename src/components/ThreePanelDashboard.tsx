@@ -1,31 +1,57 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMessageStore } from '@/store/messageStore';
+import { useDialogHistory } from '@/store/useDialogHistory';
 import { analyzeMessage } from '@/analysis/analysis-engine-core';
 import { generateResponses } from '@/analysis/response-generator';
+import { getGoalModifiedSystemPrompt, getStyleModifiedPrompt, adaptAnalysisForGoal } from '@/goal-engine';
 import ResponseSelect from './ResponseSelect';
 import { AnalysisMessage } from '@/types/response';
 
 export default function ThreePanelDashboard() {
   const { messages, currentMessage, addMessage, setCurrentMessage, updateMessage } = useMessageStore();
+  const { 
+    currentSession, 
+    addMessage: addDialogMessage, 
+    createSession 
+  } = useDialogHistory();
+  
   const [inputText, setInputText] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [expandedAnalysis, setExpandedAnalysis] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Создаем сессию по умолчанию если её нет
+  useEffect(() => {
+    if (!currentSession) {
+      createSession('defensive'); // Создаем защитную сессию по умолчанию
+    }
+  }, [currentSession, createSession]);
+
   const handleAnalyze = async () => {
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || !currentSession) return;
 
     setError(null);
     setIsAnalyzing(true);
+    
+    // Добавляем сообщение коллектора в историю
+    addDialogMessage({
+      author: 'collector',
+      text: inputText,
+      goal: currentSession.goal
+    });
+
     try {
       const analysis = await analyzeMessage(inputText);
+      
+      // Адаптируем анализ под цель сессии
+      const adaptedAnalysis = adaptAnalysisForGoal(analysis, currentSession.goal);
       
       const newMessage: AnalysisMessage = {
         id: Date.now().toString(),
         timestamp: Date.now(),
         originalText: inputText,
-        analysis
+        analysis: adaptedAnalysis
       };
 
       addMessage(newMessage);
@@ -53,14 +79,27 @@ export default function ThreePanelDashboard() {
   };
 
   const handleGenerateResponses = async (message: AnalysisMessage) => {
+    if (!currentSession) return;
+    
     setIsGenerating(true);
     try {
+      // Используем цель текущей сессии для генерации ответов
       const responses = await generateResponses({
-        goal: 'Защитить права клиента и дать корректный ответ',
+        goal: `Стратегия: ${currentSession.goal} - адаптировать ответы под выбранную тактику`,
         analysisResult: message.analysis
       });
 
       updateMessage(message.id, { responses });
+      
+      // Добавляем сгенерированные ответы в историю диалога
+      addDialogMessage({
+        author: 'assistant',
+        text: `Предложенные ответы: ${JSON.stringify(responses)}`,
+        responses: responses,
+        analysis: message.analysis,
+        goal: currentSession.goal
+      });
+      
     } catch (err: any) {
       console.error('Error generating responses:', err);
       setError(`Ошибка генерации ответов: ${err.message}`);
@@ -70,6 +109,15 @@ export default function ThreePanelDashboard() {
   };
 
   const handleUseResponse = (response: string) => {
+    // Добавляем выбранный ответ пользователя в историю
+    if (currentSession) {
+      addDialogMessage({
+        author: 'user',
+        text: response,
+        goal: currentSession.goal
+      });
+    }
+    
     setInputText(response);
     document.getElementById('message-input')?.focus();
   };
@@ -92,9 +140,26 @@ export default function ThreePanelDashboard() {
         maxHeight: '100vh',
         overflowY: 'auto'
       }}>
-        <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '16px', color: '#374151' }}>
-          📝 История анализов
-        </h2>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#374151' }}>
+            📝 История анализов
+          </h2>
+          {currentSession && (
+            <div style={{
+              padding: '4px 8px',
+              backgroundColor: currentSession.goal === 'defensive' ? '#dbeafe' : 
+                              currentSession.goal === 'aggressive' ? '#fee2e2' : '#dcfce7',
+              color: currentSession.goal === 'defensive' ? '#1e40af' : 
+                     currentSession.goal === 'aggressive' ? '#dc2626' : '#166534',
+              borderRadius: '12px',
+              fontSize: '12px',
+              fontWeight: '500'
+            }}>
+              {currentSession.goal === 'defensive' ? '🛡️ Защитная' : 
+               currentSession.goal === 'aggressive' ? '⚔️ Агрессивная' : '📋 Информационная'}
+            </div>
+          )}
+        </div>
 
         {error && (
           <div style={{
@@ -110,12 +175,16 @@ export default function ThreePanelDashboard() {
           </div>
         )}
 
+        <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>
+          💬 Анализ сообщения коллектора
+        </h3>
+        
         <div style={{ marginBottom: '16px' }}>
           <textarea
             id="message-input"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            placeholder="Введите сообщение от оператора для анализа..."
+            placeholder="Введите сообщение от коллектора для анализа..."
             style={{
               width: '100%',
               minHeight: '100px',
