@@ -9,7 +9,8 @@ export default function DialogSidebar() {
   // TODO: получить currentGoal, setGoal, vulnerabilities из стора
   const vulnerabilities = ['Phishing', 'Social Engineering']; // пример
   return (
-    <aside className="bg-white dark:bg-gray-100 p-3 space-y-3 rounded-lg shadow-lg">
+    <aside className="bg-white dark:bg-gray-100 p-3 space-y-3 rounded-lg shadow-lg" role="complementary" aria-labelledby="sidebarTitle">
+      <h3 id="sidebarTitle" className="sr-only">Dialog Control Panel</h3>
       {/* Dialog Control */}
       <SectionTitle>Dialog Control</SectionTitle>
       <div className="space-y-3">

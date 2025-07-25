@@ -35,16 +35,34 @@ export default function ResponseSelect({ responses, onSelectResponse }: Response
   if (!parsed) return <p className="text-red-600 text-sm">Invalid response format</p>;
   
   return (
-    <Card className="space-y-3 bg-white p-3 shadow-lg">
+    <Card className="space-y-3 bg-white p-3 shadow-lg" role="region" aria-labelledby="responseTitle">
+      <h3 id="responseTitle" className="sr-only">Response Generation</h3>
       <SectionTitle>Response Generation</SectionTitle>
       {Object.entries(parsed).map(([style, text]) => (
         <div key={style}>
           <h4 className="font-semibold">{style.charAt(0).toUpperCase() + style.slice(1)}</h4>
           <p className="text-sm mt-2">{text}</p>
           <div className="flex justify-end mt-2 space-x-2">
-            <Button variant="ghost" onClick={() => copy(text)}>Copy</Button>
-            <Button onClick={() => onSelectResponse(text)}>Use</Button>
-            <Button variant="ghost" onClick={() => onRegenerate(style)}>⟳</Button>
+            <Button 
+              variant="ghost" 
+              onClick={() => copy(text)}
+              aria-label={`Copy ${style} response`}
+            >
+              Copy
+            </Button>
+            <Button 
+              onClick={() => onSelectResponse(text)}
+              aria-label={`Use ${style} response`}
+            >
+              Use
+            </Button>
+            <Button 
+              variant="ghost" 
+              onClick={() => onRegenerate(style)}
+              aria-label={`Regenerate ${style} response`}
+            >
+              ⟳
+            </Button>
           </div>
         </div>
       ))}

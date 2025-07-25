@@ -44,7 +44,8 @@ export default function ControlPanel({ analysis, isAnalyzing }: ControlPanelProp
   const { vulnerabilities, persuasionTactics, psychologicalPrinciples, dialogueState } = analysis;
 
   return (
-    <Card className="space-y-3 bg-white p-3 shadow-lg">
+    <Card className="space-y-3 bg-white p-3 shadow-lg" role="region" aria-labelledby="analysisTitle">
+      <h3 id="analysisTitle" className="sr-only">Tactical Analysis</h3>
       <SectionTitle>Tactical Analysis</SectionTitle>
       
       {/* Operator Type */}
