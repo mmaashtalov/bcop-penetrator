@@ -7,13 +7,17 @@ export interface GeneratedResponses {
 export interface AnalysisMessage {
   id: string;
   timestamp: number;
+  /** Кто отправил сообщение */
+  author?: 'user' | 'assistant';
   originalText: string;
-  analysis: any; // результат из analyzeMessage
+  analysis: unknown; // результат из analyzeMessage
   responses?: GeneratedResponses;
   selectedResponse?: string;
 }
 
 export interface ResponseGeneratorParams {
   goal: string;
-  analysisResult: any;
+  analysisResult: unknown;
 }
+
+export interface ResponseOption { style: string; text: unknown; }

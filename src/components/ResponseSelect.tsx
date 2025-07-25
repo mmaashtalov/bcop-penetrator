@@ -1,112 +1,63 @@
 import React, { useState } from 'react';
-import { GeneratedResponses } from '@/types/response';
+import { GeneratedResponses } from '../types/response';
+import { Button } from './ui/Button';
+import { Card } from './ui/Card';
+import { Skeleton } from '@/components/ui';
 
-interface ResponseSelectProps {
-  responses: GeneratedResponses;
-  onUseResponse: (response: string) => void;
+function safeParse(responses: string): GeneratedResponses | null {
+  try {
+    return JSON.parse(responses);
+  } catch {
+    return null;
+  }
 }
 
-export default function ResponseSelect({ responses, onUseResponse }: ResponseSelectProps) {
-  const [selectedStyle, setSelectedStyle] = useState<keyof GeneratedResponses>('professional');
+interface ResponseSelectProps {
+  responses: GeneratedResponses | string | null;
+  onSelectResponse: (response: string) => void;
+}
 
-  const styles = {
-    legal: { label: '⚖️ Юридический', color: 'bg-blue-100 border-blue-300' },
-    professional: { label: '🤝 Профессиональный', color: 'bg-green-100 border-green-300' },
-    sarcastic: { label: '😏 Саркастичный', color: 'bg-orange-100 border-orange-300' }
-  };
-
+export default function ResponseSelect({ responses, onSelectResponse }: ResponseSelectProps) {
+  const [active, setActive] = useState<string | null>(null);
+  if (!responses) return <Skeleton className="h-32 w-full" />;
+  const parsed = typeof responses === 'string' ? safeParse(responses) : responses;
+  if (!parsed) return <p className="text-red-600 text-sm">Invalid response format</p>;
   return (
-    <div style={{ padding: '16px', borderRadius: '8px', backgroundColor: '#f9fafb' }}>
-      <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#374151', marginBottom: '16px' }}>
-        Варианты ответов
-      </h3>
-      
-      {/* Табы стилей */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-        {Object.entries(styles).map(([style, config]) => (
-          <button
-            key={style}
-            onClick={() => setSelectedStyle(style as keyof GeneratedResponses)}
-            style={{
-              padding: '8px 12px',
-              borderRadius: '6px',
-              fontSize: '14px',
-              fontWeight: '500',
-              border: 'none',
-              cursor: 'pointer',
-              backgroundColor: selectedStyle === style ? '#3b82f6' : '#f3f4f6',
-              color: selectedStyle === style ? 'white' : '#374151',
-              transition: 'all 0.2s'
-            }}
-          >
-            {config.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Текст выбранного ответа */}
-      <div style={{ 
-        padding: '16px', 
-        borderRadius: '8px', 
-        border: '2px solid #d1d5db',
-        backgroundColor: 'white',
-        marginBottom: '16px'
-      }}>
-        <p style={{ 
-          color: '#374151', 
-          whiteSpace: 'pre-wrap', 
-          lineHeight: '1.6',
-          margin: 0
-        }}>
-          {responses[selectedStyle]}
-        </p>
-      </div>
-
-      {/* Кнопка использования */}
-      <button
-        onClick={() => onUseResponse(responses[selectedStyle])}
-        style={{
-          width: '100%',
-          padding: '12px 16px',
-          backgroundColor: '#2563eb',
-          color: 'white',
-          borderRadius: '8px',
-          border: 'none',
-          cursor: 'pointer',
-          fontWeight: '500',
-          fontSize: '16px',
-          transition: 'background-color 0.2s'
-        }}
-        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
-        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
-      >
-        📋 Использовать этот ответ
-      </button>
-
-      {/* Мини-превью других стилей */}
-      <div style={{ marginTop: '16px' }}>
-        <p style={{ fontSize: '12px', color: '#6b7280', fontWeight: '500', marginBottom: '8px' }}>
-          Быстрый просмотр:
-        </p>
-        {Object.entries(styles).map(([style, config]) => {
-          if (style === selectedStyle) return null;
-          return (
-            <div key={style} style={{ 
-              fontSize: '12px', 
-              padding: '8px', 
-              backgroundColor: '#f9fafb', 
-              borderRadius: '4px',
-              borderLeft: '4px solid #d1d5db',
-              marginBottom: '4px'
-            }}>
-              <span style={{ fontWeight: '500', color: '#4b5563' }}>{config.label}:</span>
-              <span style={{ color: '#6b7280', marginLeft: '8px' }}>
-                {responses[style as keyof GeneratedResponses].substring(0, 80)}...
-              </span>
+    <div className="p-4 space-y-4">
+      <h2 className="text-lg font-semibold">Варианты ответов</h2>
+      {Object.entries(parsed).map(([category, response]) => {
+        let responseArray;
+        if (Array.isArray(response)) {
+          responseArray = response.map((r) => (typeof r === 'string' ? { text: r } : r));
+        } else if (typeof response === 'string') {
+          responseArray = [{ text: response }];
+        } else if (typeof response === 'object' && response !== null) {
+          responseArray = [response];
+        } else {
+          responseArray = [];
+        }
+        return (
+          <div key={category}>
+            <h3 className="text-md font-semibold capitalize text-neutral-600 dark:text-neutral-300 mb-2">{category}</h3>
+            <div className="space-y-2">
+              {responseArray.length === 0 ? (
+                <div className="text-sm text-neutral-400">Нет вариантов</div>
+              ) : (
+                responseArray.map((resp: any, index: number) => (
+                  <Card key={index} className={`p-3 bg-neutral-100 dark:bg-neutral-800 ${active === resp.text ? 'ring-2 ring-blue-500' : ''}`}>
+                    <p className="text-sm dark:text-neutral-200">{resp.text || resp}</p>
+                    <div className="flex justify-end mt-2">
+                      <Button size="sm" variant="outline" onClick={() => { onSelectResponse(resp.text || resp); setActive(resp.text || resp); }}>
+                        Использовать
+                      </Button>
+                    </div>
+                  </Card>
+                ))
+              )}
             </div>
-          );
-        })}
-      </div>
+          </div>
+        )
+      })}
     </div>
   );
 }

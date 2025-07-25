@@ -1,73 +1,125 @@
-import { useState } from "react";
-import { useMessageStore } from "@/store/messageStore";
-import { useDialogHistory } from "@/store/useDialogHistory";
-import { analyzeMessage } from "@/analysis/analysis-engine-core";
-import { generateResponseOptions } from "@/analysis/response-generator";
-import { adaptAnalysisForGoal } from '@/goal-engine';
+import React, { useState, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid'; // <--- ДОБАВЬТЕ ЭТУ СТРОКУ
+import { useMessageStore } from '../store/messageStore';
+import { useDialogHistory } from '../store/useDialogHistory';
+import { GeneratedResponses, AnalysisMessage } from '../types/response';
+// ... остальной код импортов
+import { analyzeMessage } from '../analysis/analysis-engine-core';
+import { generateResponses } from '../analysis/response-generator';
+import { adaptAnalysisForGoal } from '../goal-engine';
+import DialogSidebar from './DialogSidebar';
+import HeaderBar from './HeaderBar';
+import ChatMessage from './ChatMessage';
+import ControlPanel from './ControlPanel';
 import ResponseSelect from './ResponseSelect';
-import { DialogSidebar } from "./DialogSidebar";
-import MessageInput from "./MessageInput";
+import MessageInput from './MessageInput';
+import { Card } from './ui/Card';
 
 export default function ThreePanelDashboard() {
-  const [analysisResult, setAnalysisResult] = useState<any>(null);
-  const [responseOptions, setResponseOptions] = useState<string[]>([]);
-  const addMessage = useMessageStore((state) => state.addMessage);
-  const { addDialog } = useDialogHistory();
+  const {
+    messages,
+    addMessage,
+    updateMessage,
+  } = useMessageStore();
 
-  const handleSendMessage = async (message: string) => {
-    const analysis = analyzeMessage(message);
-    const goal = 'neutral'; // Or determine dynamically
-    const adaptedAnalysis = adaptAnalysisForGoal(analysis, goal);
-    setAnalysisResult(adaptedAnalysis);
+  const {
+    currentSession,
+    setCurrentSession,
+  } = useDialogHistory();
+  
+  const [analysis, setAnalysis] = useState<any>(null);
+  const [responses, setResponses] = useState<GeneratedResponses | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-    const options = await generateResponseOptions(adaptedAnalysis);
-    setResponseOptions(options);
+  useEffect(() => {
+    if (!currentSession) {
+      const newSessionId = uuidv4();
+      setCurrentSession(newSessionId);
+    }
+  }, [currentSession, setCurrentSession]);
 
-    addMessage({
-      id: Date.now().toString(),
-      text: message,
-      sender: "user",
-      timestamp: new Date(),
-    });
+  const handleSendMessage = async (text: string) => {
+    setIsAnalyzing(true);
+    setAnalysis(null);
+    setResponses(null);
 
-    if (analysis) {
-      addDialog(message, analysis);
+    const newMessage: AnalysisMessage = {
+      id: uuidv4(),
+      originalText: text,
+      author: 'user',
+      timestamp: Date.now(),
+      analysis: null,
+      responses: undefined,
+    };
+
+    addMessage(newMessage);
+
+    try {
+      const rawAnalysis = await analyzeMessage(text);
+      const adaptedAnalysis = adaptAnalysisForGoal(rawAnalysis as any, 'defensive');
+      const generatedResponses = await generateResponses({
+        goal: 'defensive',
+        analysisResult: adaptedAnalysis,
+      });
+
+      setAnalysis(adaptedAnalysis);
+      setResponses(generatedResponses);
+
+      const updatedFields = {
+        analysis: adaptedAnalysis,
+        responses: generatedResponses,
+      };
+
+      updateMessage(newMessage.id, updatedFields);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
+  const handleSelectResponse = (response: string) => {
+    const newMessage: AnalysisMessage = {
+      id: uuidv4(),
+      originalText: response,
+      author: 'assistant',
+      timestamp: Date.now(),
+      analysis: null,
+      responses: undefined,
+    };
+    addMessage(newMessage);
+  };
+
   return (
-    <main className="grid h-screen overflow-hidden
-        sm:grid-cols-1 md:grid-cols-[240px_1fr] lg:grid-cols-[240px_1fr_300px] xl:grid-cols-[240px_1fr_300px_360px]">
-      {/* Left sidebar */}
-      <aside className="h-full overflow-y-auto border-r dark:border-neutral-700">
-        <DialogSidebar />
-      </aside>
+    <div className="flex h-screen flex-col bg-neutral-100 dark:bg-neutral-900">
+      <HeaderBar />
+      <div className="grid flex-1 grid-cols-[320px_1fr_480px] gap-4 p-4">
+        {/* Sidebar */}
+        <aside className="flex flex-col gap-4 rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-950">
+          <DialogSidebar />
+        </aside>
 
-      {/* Chat dialog */}
-      <section className="h-full overflow-y-auto">
-        <div className="p-4">
-          <MessageInput onSendMessage={handleSendMessage} />
-          {/* Dialog history will be rendered here */}
-        </div>
-      </section>
+        {/* Main Chat */}
+        <main className="flex flex-col gap-4 rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-950">
+          <div className="flex-1 overflow-y-auto">
+            <Card className="flex h-full flex-col gap-4 overflow-y-auto p-4">
+              <h2 className="text-xl font-bold">Диалог</h2>
+              <div className="flex flex-col gap-4">
+                {messages.map((msg) => (
+                  <ChatMessage key={msg.id} message={msg} />
+                ))}
+              </div>
+            </Card>
+          </div>
+          <MessageInput onSendMessage={handleSendMessage} disabled={isAnalyzing} />
+        </main>
 
-      {/* Analysis / Response panel */}
-      <aside className="hidden lg:block h-full overflow-y-auto border-l dark:border-neutral-700">
-        <div className="p-4">
-          {analysisResult && (
-            <div>
-              <h2 className="text-lg font-bold">Анализ сообщения</h2>
-              <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(analysisResult, null, 2)}</pre>
-            </div>
-          )}
-          {responseOptions.length > 0 && (
-            <ResponseSelect
-              options={responseOptions}
-              onSelect={(option) => console.log('Selected:', option)}
-            />
-          )}
-        </div>
-      </aside>
-    </main>
+        {/* Analysis Panel */}
+        <aside className="flex flex-col gap-4 rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-950">
+          <ControlPanel analysis={analysis} isAnalyzing={isAnalyzing} />
+          <ResponseSelect responses={responses} onSelectResponse={handleSelectResponse} />
+        </aside>
+      </div>
+    </div>
   );
 }

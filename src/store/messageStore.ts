@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { AnalysisMessage } from '@/types/response';
+import { AnalysisMessage } from '../types/response';
 
 interface MessageStore {
   messages: AnalysisMessage[];
@@ -11,7 +11,7 @@ interface MessageStore {
   clearMessages: () => void;
 }
 
-export const useMessageStore = create<MessageStore>((set, get) => ({
+export const useMessageStore = create<MessageStore>((set) => ({
   messages: [],
   currentMessage: null,
   

@@ -27,7 +27,7 @@ export default function HistoryPage() {
                 background: '#ffffff',
               }}
             >
-              <div style={{ fontSize: '14px', marginBottom: '4px' }}>{s.title || 'Без названия'}</div>
+              <div style={{ fontSize: '14px', marginBottom: '4px' }}>{s.messages[0]?.originalText || 'Без названия'}</div>
               <div style={{ fontSize: '12px', color: '#6b7280' }}>{new Date(s.startTime).toLocaleString()}</div>
             </Link>
           ))}

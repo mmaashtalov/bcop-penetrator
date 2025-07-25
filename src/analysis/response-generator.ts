@@ -1,5 +1,5 @@
-import { callGPTWithSystem } from '@/lib/openai';
-import { GeneratedResponses, ResponseGeneratorParams } from '@/types/response';
+import { callGPTWithSystem } from '../lib/openai';
+import { GeneratedResponses, ResponseGeneratorParams } from '../types/response';
 
 export async function generateResponses(params: ResponseGeneratorParams): Promise<GeneratedResponses> {
   const { goal, analysisResult } = params;
