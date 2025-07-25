@@ -26,7 +26,7 @@ export async function generateResponses(params: ResponseGeneratorParams): Promis
       { response_format: { type: 'json_object' } }
     );
 
-    return JSON.parse(response as string);
+    return JSON.parse(response) as GeneratedResponses;
   } catch (error) {
     console.error('Error generating responses:', error);
     return {

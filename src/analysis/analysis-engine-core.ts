@@ -1,7 +1,8 @@
 import { SYSTEM_PROMPT_ANALYSIS } from '../prompts/systemPrompt';
 import { callGPTWithSystem } from '../lib/openai';
+import { AnalysisResult } from '../types/response';
 
-export async function analyzeMessage(text: string) {
+export async function analyzeMessage(text: string): Promise<AnalysisResult> {
   const userPrompt = SYSTEM_PROMPT_ANALYSIS.replace(
     '[ВСТАВЬ СЮДА ОДНО ИЛИ НЕСКОЛЬКО СООБЩЕНИЙ СО СТОРОНЫ ОПЕРАТОРА]',
     text
@@ -13,5 +14,5 @@ export async function analyzeMessage(text: string) {
     { response_format: { type: 'json_object' } }
   );
 
-  return JSON.parse(raw as string);
+  return JSON.parse(raw) as AnalysisResult;
 }

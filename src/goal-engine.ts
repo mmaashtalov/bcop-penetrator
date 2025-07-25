@@ -1,4 +1,5 @@
- // Goal Engine - влияет на tone и стратегию ответов GPT
+// Goal Engine - влияет на tone и стратегию ответов GPT
+import { AnalysisResult, AdaptedAnalysisResult, GoalAlignment } from './types/response';
 export type GoalType = 'defensive' | 'aggressive' | 'informational';
 
 export interface GoalStrategy {
@@ -106,11 +107,7 @@ ${styleModifier}
 }
 
 // Анализ соответствия сообщения выбранной цели
-export function analyzeGoalAlignment(message: string, goal: GoalType): {
-  alignment: number; // 0-100%
-  suggestions: string[];
-  missedOpportunities: string[];
-} {
+export function analyzeGoalAlignment(message: string, goal: GoalType): GoalAlignment {
   const strategy = GOAL_STRATEGIES[goal];
   const messageWords = message.toLowerCase().split(/\s+/);
   
@@ -174,7 +171,7 @@ export function getNextMessageRecommendations(goal: GoalType, _conversationHisto
 }
 
 // Адаптация анализа под цель
-export function adaptAnalysisForGoal(rawAnalysis: any, goal: GoalType): any {
+export function adaptAnalysisForGoal(rawAnalysis: AnalysisResult, goal: GoalType): AdaptedAnalysisResult {
   try {
     const strategy = GOAL_STRATEGIES[goal];
     
@@ -184,7 +181,7 @@ export function adaptAnalysisForGoal(rawAnalysis: any, goal: GoalType): any {
     }
     
     // Добавляем специфичные для цели метрики
-    const adaptedAnalysis = {
+    const adaptedAnalysis: AdaptedAnalysisResult = {
       ...rawAnalysis,
       goalStrategy: strategy.name,
       goalAlignment: analyzeGoalAlignment(rawAnalysis.originalMessage || '', goal),
@@ -216,6 +213,6 @@ export function adaptAnalysisForGoal(rawAnalysis: any, goal: GoalType): any {
   return adaptedAnalysis;
   } catch (error) {
     console.error('Error adapting analysis for goal:', error);
-    return rawAnalysis;
+    return rawAnalysis as AdaptedAnalysisResult;
   }
 }
