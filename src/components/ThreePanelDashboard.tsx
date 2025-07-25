@@ -109,14 +109,11 @@ export default function ThreePanelDashboard() {
         {/* Main Chat */}
         <main className="flex flex-col gap-4 rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-950">
           <div className="flex-1 overflow-y-auto">
-            <Card className="flex h-full flex-col gap-4 overflow-y-auto p-4">
-              <h2 className="text-xl font-bold">Диалог</h2>
-              <div className="flex flex-col gap-4">
-                {messages.map((msg) => (
-                  <ChatMessage key={msg.id} message={msg} />
-                ))}
-                <div ref={chatEndRef} />
-              </div>
+            <Card className="h-full px-4 py-2 overflow-y-auto space-y-4">
+              {messages.map((msg) => (
+                <ChatMessage key={msg.id} message={msg} />
+              ))}
+              <div ref={chatEndRef} />
             </Card>
           </div>
           <MessageInput onSendMessage={handleSendMessage} disabled={isAnalyzing} />
