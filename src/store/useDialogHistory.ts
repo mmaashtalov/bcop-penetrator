@@ -45,7 +45,7 @@ export const useDialogHistory = create<HistoryState>((set, get) => ({
     const updatedSessions = [...get().sessions, newSession];
     set({ sessions: updatedSessions, currentSession: newSession });
   },
-  addMessageToCurrentSession: (message: AnalysisMessage) => {
+  addMessageToCurrentSession: (_message: AnalysisMessage) => {
     // Реализация добавления сообщения в текущую сессию
   },
 }));

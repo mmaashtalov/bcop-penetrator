@@ -145,8 +145,9 @@ export function analyzeGoalAlignment(message: string, goal: GoalType): {
 }
 
 // Получение рекомендаций для следующего сообщения
-export function getNextMessageRecommendations(goal: GoalType, conversationHistory: string[]): string[] {
-  const strategy = GOAL_STRATEGIES[goal];
+export function getNextMessageRecommendations(goal: GoalType, _conversationHistory: string[]): string[] {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _strategy = GOAL_STRATEGIES[goal];
   const recommendations: string[] = [];
   
   switch (goal) {
