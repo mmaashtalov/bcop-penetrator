@@ -100,16 +100,16 @@ export default function ThreePanelDashboard() {
   return (
     <div className="flex h-screen flex-col bg-neutral-100 dark:bg-neutral-900">
       <HeaderBar />
-      <div className="grid flex-1 grid-cols-[320px_1fr_480px] gap-4 p-4">
+      <div className="grid flex-1 grid-cols-[320px_1fr_480px] gap-3 p-3">
         {/* Sidebar */}
-        <aside className="flex flex-col gap-4 rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-950">
+        <aside className="flex flex-col gap-3 rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-950">
           <DialogSidebar />
         </aside>
 
         {/* Main Chat */}
-        <main className="flex flex-col gap-4 rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-950">
+        <main className="flex flex-col gap-3 rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-950">
           <div className="flex-1 overflow-y-auto">
-            <Card className="h-full px-4 py-2 overflow-y-auto space-y-4">
+            <Card className="h-full px-3 py-2 overflow-y-auto space-y-3">
               {messages.map((msg) => (
                 <ChatMessage key={msg.id} message={msg} />
               ))}
@@ -120,7 +120,7 @@ export default function ThreePanelDashboard() {
         </main>
 
         {/* Analysis Panel */}
-        <aside className="flex flex-col gap-4 rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-950">
+        <aside className="flex flex-col gap-3 rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-950">
           <ControlPanel analysis={analysis} isAnalyzing={isAnalyzing} />
           <ResponseSelect responses={responses} onSelectResponse={handleSelectResponse} />
         </aside>

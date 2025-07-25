@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { GeneratedResponses } from '../types/response';
 import { Button } from './ui/Button';
 import { Card } from './ui/Card';
@@ -35,7 +35,7 @@ export default function ResponseSelect({ responses, onSelectResponse }: Response
   if (!parsed) return <p className="text-red-600 text-sm">Invalid response format</p>;
   
   return (
-    <Card className="space-y-6 bg-white p-4 shadow-lg">
+    <Card className="space-y-3 bg-white p-3 shadow-lg">
       <SectionTitle>Response Generation</SectionTitle>
       {Object.entries(parsed).map(([style, text]) => (
         <div key={style}>

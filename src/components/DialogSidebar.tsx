@@ -9,19 +9,19 @@ export default function DialogSidebar() {
   // TODO: получить currentGoal, setGoal, vulnerabilities из стора
   const vulnerabilities = ['Phishing', 'Social Engineering']; // пример
   return (
-    <aside className="bg-white dark:bg-gray-100 p-4 space-y-6 rounded-lg shadow-lg">
+    <aside className="bg-white dark:bg-gray-100 p-3 space-y-3 rounded-lg shadow-lg">
       {/* Dialog Control */}
       <SectionTitle>Dialog Control</SectionTitle>
-      <div className="space-y-4">
+      <div className="space-y-3">
         {/* Current Goal */}
         {/* <Select className="w-full border rounded" /> */}
         {/* Session Stats */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white p-3 rounded shadow text-center">
+          <div className="bg-white p-2 rounded shadow text-center">
             <p className="text-2xl font-bold">4</p>
             <p className="text-xs text-gray-500">Messages</p>
           </div>
-          <div className="bg-white p-3 rounded shadow text-center">
+          <div className="bg-white p-2 rounded shadow text-center">
             <p className="text-2xl font-bold">2</p>
             <p className="text-xs text-gray-500">Sessions</p>
           </div>

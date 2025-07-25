@@ -44,11 +44,11 @@ export default function ControlPanel({ analysis, isAnalyzing }: ControlPanelProp
   const { vulnerabilities, persuasionTactics, psychologicalPrinciples, dialogueState } = analysis;
 
   return (
-    <Card className="space-y-6 bg-white p-4 shadow-lg">
+    <Card className="space-y-3 bg-white p-3 shadow-lg">
       <SectionTitle>Tactical Analysis</SectionTitle>
       
       {/* Operator Type */}
-      <div className="p-3 border rounded flex flex-col">
+      <div className="p-2 border rounded flex flex-col">
         <h4 className="font-semibold">Operator Type</h4>
         <p>{dialogueState || 'N/A'}</p>
         <Progress value={75} />
