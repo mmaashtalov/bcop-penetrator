@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import { DialogSession, DialogMessage } from '../store/useDialogHistory';
+import { logError } from '@/utils/logger';
 
 // Экспорт диалога в PDF
 export function exportDialogToPDF(session: DialogSession) {
@@ -7,12 +8,13 @@ export function exportDialogToPDF(session: DialogSession) {
     console.warn('No session data to export');
     return;
   }
-  
-  const doc = new jsPDF();
-  const pageHeight = doc.internal.pageSize.height;
-  let yPosition = 20;
-  const lineHeight = 7;
-  const maxLineWidth = 180;
+
+  try {
+    const doc = new jsPDF();
+    const pageHeight = doc.internal.pageSize.height;
+    let yPosition = 20;
+    const lineHeight = 7;
+    const maxLineWidth = 180;
 
   // Заголовок
   doc.setFontSize(16);
@@ -91,6 +93,9 @@ export function exportDialogToPDF(session: DialogSession) {
   // Сохранение файла
   const filename = `dialog_${session.startTime}_${Date.now()}.pdf`;
   doc.save(filename);
+  } catch (e: any) {
+    logError(e, { sessionId: session.id });
+  }
 }
 
 // Экспорт в CSV
