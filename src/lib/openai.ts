@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { logError } from '@/utils/logger';
 
 // Проверяем наличие API ключа
 const apiKey = import.meta.env.VITE_OPENAI_KEY;
@@ -58,13 +59,18 @@ async function retryWithBackoff<T>(
 }
 
 export async function callGPT(prompt: string) {
-  return retryWithBackoff(async () => {
-    const r = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [{ role: 'user', content: prompt }]
+  try {
+    return await retryWithBackoff(async () => {
+      const r = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'user', content: prompt }]
+      });
+      return r.choices[0].message.content;
     });
-    return r.choices[0].message.content;
-  });
+  } catch (e: any) {
+    logError(e, { prompt });
+    throw e;
+  }
 }
 
 export async function callGPTWithSystem(
@@ -72,15 +78,20 @@ export async function callGPTWithSystem(
   user: string,
   opts = {}
 ) {
-  return retryWithBackoff(async () => {
-    const r = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: user }
-      ],
-      ...opts
+  try {
+    return await retryWithBackoff(async () => {
+      const r = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: user }
+        ],
+        ...opts
+      });
+      return r.choices[0].message.content;
     });
-    return r.choices[0].message.content;
-  });
+  } catch (e: any) {
+    logError(e, { system, user });
+    throw e;
+  }
 }

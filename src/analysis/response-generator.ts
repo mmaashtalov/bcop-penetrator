@@ -1,5 +1,6 @@
 import { callGPTWithSystem } from '@/lib/openai';
 import { GeneratedResponses, ResponseGeneratorParams } from '@/types/response';
+import { logError } from '@/utils/logger';
 
 export async function generateResponses(params: ResponseGeneratorParams): Promise<GeneratedResponses> {
   const { goal, analysisResult } = params;
@@ -25,13 +26,12 @@ export async function generateResponses(params: ResponseGeneratorParams): Promis
       userPrompt,
       { response_format: { type: 'json_object' } }
     );
-
     return JSON.parse(response as string);
   } catch (error) {
-    console.error('Error generating responses:', error);
+    logError(error as Error, { goal });
     return {
       legal: 'Ошибка генерации юридического ответа',
-      professional: 'Ошибка генерации профессионального ответа', 
+      professional: 'Ошибка генерации профессионального ответа',
       sarcastic: 'Ошибка генерации саркастичного ответа'
     };
   }
