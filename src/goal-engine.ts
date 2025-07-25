@@ -1,4 +1,5 @@
- // Goal Engine - влияет на tone и стратегию ответов GPT
+// Goal Engine - влияет на tone и стратегию ответов GPT
+import { AnalysisResult, AdaptedAnalysisResult, GoalAlignment } from './types/response';
 export type GoalType = 'defensive' | 'aggressive' | 'informational';
 
 export interface GoalStrategy {
@@ -106,11 +107,7 @@ ${styleModifier}
 }
 
 // Анализ соответствия сообщения выбранной цели
-export function analyzeGoalAlignment(message: string, goal: GoalType): {
-  alignment: number; // 0-100%
-  suggestions: string[];
-  missedOpportunities: string[];
-} {
+export function analyzeGoalAlignment(message: string, goal: GoalType): GoalAlignment {
   const strategy = GOAL_STRATEGIES[goal];
   const messageWords = message.toLowerCase().split(/\s+/);
   
@@ -174,17 +171,23 @@ export function getNextMessageRecommendations(goal: GoalType, _conversationHisto
 }
 
 // Адаптация анализа под цель
-export function adaptAnalysisForGoal(rawAnalysis: any, goal: GoalType): any {
+export function adaptAnalysisForGoal(rawAnalysis: AnalysisResult, goal: GoalType): AdaptedAnalysisResult {
   try {
     const strategy = GOAL_STRATEGIES[goal];
     
     if (!strategy) {
       console.warn(`Unknown goal type: ${goal}`);
-      return rawAnalysis;
+      return {
+        ...rawAnalysis,
+        goalStrategy: 'Unknown',
+        goalAlignment: { alignment: 0, suggestions: [], missedOpportunities: [] },
+        recommendations: [],
+        strategicOpportunities: []
+      };
     }
     
     // Добавляем специфичные для цели метрики
-    const adaptedAnalysis = {
+    const adaptedAnalysis: AdaptedAnalysisResult = {
       ...rawAnalysis,
       goalStrategy: strategy.name,
       goalAlignment: analyzeGoalAlignment(rawAnalysis.originalMessage || '', goal),
@@ -195,7 +198,7 @@ export function adaptAnalysisForGoal(rawAnalysis: any, goal: GoalType): any {
   // Специфичные возможности для каждой цели
   switch (goal) {
     case 'defensive':
-      if (rawAnalysis.legalViolations?.length > 0) {
+      if (rawAnalysis.legalViolations && rawAnalysis.legalViolations.length > 0) {
         adaptedAnalysis.strategicOpportunities.push('Документируйте нарушения для жалобы');
       }
       break;
@@ -216,6 +219,12 @@ export function adaptAnalysisForGoal(rawAnalysis: any, goal: GoalType): any {
   return adaptedAnalysis;
   } catch (error) {
     console.error('Error adapting analysis for goal:', error);
-    return rawAnalysis;
+    return {
+      ...rawAnalysis,
+      goalStrategy: 'Error',
+      goalAlignment: { alignment: 0, suggestions: [], missedOpportunities: [] },
+      recommendations: [],
+      strategicOpportunities: []
+    };
   }
 }

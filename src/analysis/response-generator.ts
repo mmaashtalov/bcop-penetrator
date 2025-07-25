@@ -26,7 +26,11 @@ export async function generateResponses(params: ResponseGeneratorParams): Promis
       { response_format: { type: 'json_object' } }
     );
 
-    return JSON.parse(response as string);
+    if (!response) {
+      throw new Error('No response from OpenAI API');
+    }
+
+    return JSON.parse(response) as GeneratedResponses;
   } catch (error) {
     console.error('Error generating responses:', error);
     return {

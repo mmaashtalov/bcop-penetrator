@@ -2,7 +2,20 @@ import React, { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid'; // <--- ДОБАВЬТЕ ЭТУ СТРОКУ
 import { useMessageStore } from '../store/messageStore';
 import { useDialogHistory } from '../store/useDialogHistory';
-import { GeneratedResponses, AnalysisMessage } from '../types/response';
+import { GeneratedResponses, AnalysisMessage, AdaptedAnalysisResult, AnalysisResult } from '../types/response';
+
+// Адаптер для преобразования AdaptedAnalysisResult в AnalysisDetails
+function adaptAnalysisForControlPanel(analysis: AdaptedAnalysisResult | null) {
+  if (!analysis) return null;
+  
+  return {
+    vulnerabilities: analysis.strategicOpportunities || [],
+    persuasionTactics: analysis.recommendations || [],
+    psychologicalPrinciples: analysis.goalAlignment?.suggestions || [],
+    dialogueState: analysis.goalStrategy || 'Unknown',
+    reasoning: analysis.goalAlignment?.missedOpportunities?.join(', ') || undefined
+  };
+}
 // ... остальной код импортов
 import { analyzeMessage } from '../analysis/analysis-engine-core';
 import { generateResponses } from '../analysis/response-generator';
@@ -27,7 +40,7 @@ export default function ThreePanelDashboard() {
     setCurrentSession,
   } = useDialogHistory();
   
-  const [analysis, setAnalysis] = useState<any>(null);
+  const [analysis, setAnalysis] = useState<AdaptedAnalysisResult | null>(null);
   const [responses, setResponses] = useState<GeneratedResponses | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
@@ -56,7 +69,7 @@ export default function ThreePanelDashboard() {
 
     try {
       const rawAnalysis = await analyzeMessage(text);
-      const adaptedAnalysis = adaptAnalysisForGoal(rawAnalysis as any, 'defensive');
+      const adaptedAnalysis = adaptAnalysisForGoal(rawAnalysis, 'defensive');
       const generatedResponses = await generateResponses({
         goal: 'defensive',
         analysisResult: adaptedAnalysis,
@@ -124,7 +137,7 @@ export default function ThreePanelDashboard() {
         {/* Analysis Panel */}
         <aside className="flex flex-col gap-3 rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-950">
           <div className="animate-fadeIn duration-300">
-            <ControlPanel analysis={analysis} isAnalyzing={isAnalyzing} />
+            <ControlPanel analysis={adaptAnalysisForControlPanel(analysis)} isAnalyzing={isAnalyzing} />
             <ResponseSelect responses={responses} onSelectResponse={handleSelectResponse} />
           </div>
         </aside>
