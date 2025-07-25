@@ -103,7 +103,9 @@ export default function ThreePanelDashboard() {
       <div className="grid flex-1 grid-cols-[320px_1fr_480px] gap-3 p-3">
         {/* Sidebar */}
         <aside className="flex flex-col gap-3 rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-950">
-          <DialogSidebar />
+          <div className="animate-fadeIn duration-300">
+            <DialogSidebar />
+          </div>
         </aside>
 
         {/* Main Chat */}
@@ -121,8 +123,10 @@ export default function ThreePanelDashboard() {
 
         {/* Analysis Panel */}
         <aside className="flex flex-col gap-3 rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-950">
-          <ControlPanel analysis={analysis} isAnalyzing={isAnalyzing} />
-          <ResponseSelect responses={responses} onSelectResponse={handleSelectResponse} />
+          <div className="animate-fadeIn duration-300">
+            <ControlPanel analysis={analysis} isAnalyzing={isAnalyzing} />
+            <ResponseSelect responses={responses} onSelectResponse={handleSelectResponse} />
+          </div>
         </aside>
       </div>
     </div>
