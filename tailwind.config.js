@@ -34,6 +34,12 @@ export default {
         danger: { DEFAULT: "#E53935" },
         warning: { DEFAULT: "#FFB300" },
         success: { DEFAULT: "#43A047" },
+        secondary: '#374151',
+        'bg-light': '#F9FAFB',
+        'bg-dark':  '#111827',
+      },
+      fontFamily: {
+        sans: ['Inter','sans-serif'],
       },
     },
   },
