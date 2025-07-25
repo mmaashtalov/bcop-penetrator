@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid'; // <--- ДОБАВЬТЕ ЭТУ СТРОКУ
 import { useMessageStore } from '../store/messageStore';
 import { useDialogHistory } from '../store/useDialogHistory';
@@ -90,6 +90,13 @@ export default function ThreePanelDashboard() {
     addMessage(newMessage);
   };
 
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages.length]);
+
   return (
     <div className="flex h-screen flex-col bg-neutral-100 dark:bg-neutral-900">
       <HeaderBar />
@@ -108,6 +115,7 @@ export default function ThreePanelDashboard() {
                 {messages.map((msg) => (
                   <ChatMessage key={msg.id} message={msg} />
                 ))}
+                <div ref={chatEndRef} />
               </div>
             </Card>
           </div>
