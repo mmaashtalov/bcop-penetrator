@@ -1,4 +1,6 @@
 import React from 'react';
 export const SectionTitle = ({ children }: { children: React.ReactNode }) => (
-  <h2 className="text-lg font-semibold mb-3 dark:text-white">{children}</h2>
+  <h2 className="text-2xl font-semibold mb-2 leading-relaxed dark:text-white">
+    {children}
+  </h2>
 ); 
