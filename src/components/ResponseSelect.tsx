@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui';
 
 function safeParse(responses: string): GeneratedResponses | null {
   try {
-    return JSON.parse(responses);
+    return JSON.parse(responses) as GeneratedResponses;
   } catch {
     return null;
   }

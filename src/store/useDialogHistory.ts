@@ -8,7 +8,7 @@ export interface DialogSession {
   messages: AnalysisMessage[];
 }
 
-interface Dialog { id: string; title: string; messages: any[] }
+interface Dialog { id: string; title: string; messages: AnalysisMessage[] }
 interface HistoryState {
   dialogs: Dialog[];
   activeId?: string;

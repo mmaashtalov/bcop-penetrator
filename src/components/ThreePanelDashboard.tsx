@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid'; // <--- ДОБАВЬТЕ ЭТУ СТРОКУ
 import { useMessageStore } from '../store/messageStore';
 import { useDialogHistory } from '../store/useDialogHistory';
-import { GeneratedResponses, AnalysisMessage } from '../types/response';
+import { GeneratedResponses, AnalysisMessage, AdaptedAnalysisResult, AnalysisResult } from '../types/response';
 // ... остальной код импортов
 import { analyzeMessage } from '../analysis/analysis-engine-core';
 import { generateResponses } from '../analysis/response-generator';
@@ -27,7 +27,7 @@ export default function ThreePanelDashboard() {
     setCurrentSession,
   } = useDialogHistory();
   
-  const [analysis, setAnalysis] = useState<any>(null);
+  const [analysis, setAnalysis] = useState<AdaptedAnalysisResult | null>(null);
   const [responses, setResponses] = useState<GeneratedResponses | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
@@ -56,7 +56,7 @@ export default function ThreePanelDashboard() {
 
     try {
       const rawAnalysis = await analyzeMessage(text);
-      const adaptedAnalysis = adaptAnalysisForGoal(rawAnalysis as any, 'defensive');
+      const adaptedAnalysis = adaptAnalysisForGoal(rawAnalysis, 'defensive');
       const generatedResponses = await generateResponses({
         goal: 'defensive',
         analysisResult: adaptedAnalysis,
