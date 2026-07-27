@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#4f46e5" />
+  <meta name="description" content="Персональный экспресс-трек под конкретную вакансию с честной оценкой достижимости." />
+  <title>Трек под вакансию — демо</title>
+  <style>
+    :root{
+      --bg:#f7f7fb;--surface:#fff;--surface-2:#f1f2f8;--text:#18181b;--muted:#676779;
+      --line:#e5e7ef;--primary:#4f46e5;--primary-2:#6d5dfc;--primary-soft:#eeedff;
+      --success:#087f5b;--success-soft:#e8f8f1;--warn:#a35a00;--warn-soft:#fff4df;
+      --danger:#b42318;--danger-soft:#fff0ef;--info:#1d4ed8;--info-soft:#eef4ff;
+      --radius:22px;--radius-sm:14px;--shadow:0 18px 55px rgba(30,31,64,.10);
+      --max:1120px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:radial-gradient(circle at 18% 0%,#ebe9ff 0,transparent 33%),var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.5}
+    button,input,textarea,select{font:inherit}
+    button{cursor:pointer}
+    a{color:inherit}
+    .shell{width:min(var(--max),calc(100% - 32px));margin:0 auto}
+    header{position:sticky;top:0;z-index:40;background:rgba(247,247,251,.84);backdrop-filter:blur(16px);border-bottom:1px solid rgba(229,231,239,.75)}
+    .topbar{height:68px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .brand{display:flex;align-items:center;gap:11px;font-weight:850;letter-spacing:-.025em}
+    .brand-mark{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,var(--primary),#8b5cf6);color:white;box-shadow:0 10px 25px rgba(79,70,229,.26)}
+    .top-actions{display:flex;align-items:center;gap:8px}
+    .badge{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;background:var(--primary-soft);color:#3d34b7;font-size:12px;font-weight:800}
+    .btn{border:0;border-radius:14px;padding:12px 16px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:.18s ease;min-height:44px}
+    .btn:hover{transform:translateY(-1px)}
+    .btn:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid rgba(79,70,229,.25);outline-offset:2px}
+    .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;box-shadow:0 12px 26px rgba(79,70,229,.23)}
+    .btn-secondary{background:var(--surface);color:var(--text);border:1px solid var(--line)}
+    .btn-ghost{background:transparent;color:var(--muted)}
+    .btn-danger{background:var(--danger-soft);color:var(--danger)}
+    .btn-block{width:100%}
+    main{padding:36px 0 80px}
+    .hero{padding:36px 0 22px;display:grid;grid-template-columns:1.2fr .8fr;gap:30px;align-items:center}
+    .eyebrow{color:var(--primary);font-weight:900;text-transform:uppercase;letter-spacing:.1em;font-size:12px;margin-bottom:12px}
+    h1{font-size:clamp(38px,6vw,72px);line-height:1.02;letter-spacing:-.055em;margin:0 0 20px;max-width:850px}
+    h2{font-size:clamp(26px,4vw,42px);line-height:1.08;letter-spacing:-.035em;margin:0 0 12px}
+    h3{font-size:20px;line-height:1.2;letter-spacing:-.02em;margin:0}
+    p{margin:0}
+    .lead{font-size:clamp(17px,2.2vw,21px);color:var(--muted);max-width:760px}
+    .hero-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+    .hero-card{background:linear-gradient(155deg,#1c1938,#4338ca 70%,#7259fa);color:#fff;border-radius:30px;padding:24px;box-shadow:var(--shadow);position:relative;overflow:hidden;min-height:330px}
+    .hero-card:after{content:"";position:absolute;width:240px;height:240px;border-radius:50%;background:rgba(255,255,255,.1);right:-100px;top:-80px}
+    .metric{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:16px 0;border-bottom:1px solid rgba(255,255,255,.14);position:relative;z-index:1}
+    .metric:last-child{border-bottom:0}
+    .metric strong{font-size:26px}
+    .muted-on-dark{color:rgba(255,255,255,.72);font-size:13px}
+    .section{margin-top:32px}
+    .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .step-card,.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 8px 30px rgba(24,24,27,.045)}
+    .step-card{padding:18px}
+    .step-num{width:30px;height:30px;border-radius:10px;background:var(--primary-soft);color:var(--primary);font-weight:900;display:grid;place-items:center;margin-bottom:14px}
+    .step-card p{color:var(--muted);font-size:14px;margin-top:7px}
+    .workspace{margin-top:26px}
+    .card{padding:24px}
+    .card-header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:20px}
+    .card-subtitle{color:var(--muted);font-size:14px;margin-top:5px}
+    .tabs{display:flex;gap:8px;background:var(--surface-2);padding:5px;border-radius:16px;margin-bottom:20px}
+    .tab{flex:1;border:0;border-radius:12px;padding:10px;background:transparent;color:var(--muted);font-weight:800}
+    .tab.active{background:#fff;color:var(--text);box-shadow:0 4px 14px rgba(24,24,27,.08)}
+    .demo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .demo-card{border:1px solid var(--line);border-radius:18px;padding:17px;background:#fff;text-align:left;transition:.18s ease}
+    .demo-card:hover{border-color:#b9b5ff;transform:translateY(-2px);box-shadow:0 12px 30px rgba(79,70,229,.09)}
+    .demo-card .mini{font-size:12px;font-weight:850;color:var(--primary);text-transform:uppercase;letter-spacing:.06em}
+    .demo-card h3{margin:8px 0 7px;font-size:17px}
+    .demo-card p{font-size:13px;color:var(--muted)}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .field{display:flex;flex-direction:column;gap:8px}
+    .field label{font-size:13px;font-weight:850}
+    .field small{color:var(--muted)}
+    textarea,input,select{width:100%;border:1px solid var(--line);background:#fff;color:var(--text);border-radius:14px;padding:13px 14px;transition:.15s ease}
+    textarea{min-height:230px;resize:vertical}
+    textarea:focus,input:focus,select:focus{border-color:#9f99ff}
+    .full{grid-column:1/-1}
+    .inline-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .file-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px dashed #bbb7e9;background:#fbfaff;border-radius:14px;padding:12px 14px}
+    .file-row input{border:0;padding:0;background:transparent;max-width:220px}
+    .hint{font-size:12px;color:var(--muted)}
+    .notice{padding:14px 16px;border-radius:15px;font-size:13px;background:var(--info-soft);color:#234489;border:1px solid #dbe7ff}
+    .error{background:var(--danger-soft);color:var(--danger);border-color:#ffd5d1}
+    .hidden{display:none!important}
+    .analysis-wrap{max-width:720px;margin:40px auto}
+    .spinner{width:62px;height:62px;margin:0 auto 22px;border-radius:50%;border:5px solid #e7e5ff;border-top-color:var(--primary);animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .progress{height:9px;background:#ececf3;border-radius:999px;overflow:hidden;margin:24px 0}
+    .progress > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--primary),#8b5cf6);border-radius:inherit;transition:width .4s ease}
+    .analysis-steps{display:grid;gap:10px}
+    .analysis-step{display:flex;align-items:center;gap:12px;padding:13px 15px;border-radius:14px;background:var(--surface-2);color:var(--muted);font-weight:750}
+    .analysis-step .dot{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:#dddde8;font-size:12px}
+    .analysis-step.active{background:var(--primary-soft);color:#3932a8}
+    .analysis-step.done{background:var(--success-soft);color:var(--success)}
+    .diagnostic-list{display:grid;gap:14px}
+    .question{padding:17px;border:1px solid var(--line);border-radius:17px;background:#fff}
+    .question p{font-weight:800;margin-bottom:11px}
+    .options{display:grid;gap:8px}
+    .option{display:flex;align-items:flex-start;gap:9px;padding:10px;border-radius:12px;background:var(--surface-2)}
+    .option input{width:auto;margin-top:3px}
+    .verdict-top{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center}
+    .verdict-label{display:inline-flex;padding:8px 11px;border-radius:999px;font-weight:900;font-size:12px;letter-spacing:.04em}
+    .verdict-go{background:var(--success-soft);color:var(--success)}
+    .verdict-risk{background:var(--warn-soft);color:var(--warn)}
+    .verdict-no{background:var(--danger-soft);color:var(--danger)}
+    .verdict-data{background:var(--info-soft);color:var(--info)}
+    .score-ring{width:105px;height:105px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--primary) var(--score),#ececf3 0);position:relative}
+    .score-ring:before{content:"";position:absolute;inset:9px;background:#fff;border-radius:50%}
+    .score-ring strong{z-index:1;font-size:25px}
+    .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+    .result-box{padding:17px;border-radius:18px;border:1px solid var(--line);background:#fff}
+    .result-box h3{font-size:15px;margin-bottom:10px}
+    .result-box ul{padding-left:19px;margin:0;color:var(--muted);font-size:14px}
+    .result-box li+li{margin-top:6px}
+    .risk-strip{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+    .chip{display:inline-flex;padding:8px 10px;border-radius:999px;background:var(--surface-2);font-size:12px;font-weight:800;color:#525263}
+    .course-layout{display:grid;grid-template-columns:270px 1fr;gap:16px}
+    .module-list{display:grid;gap:8px;position:sticky;top:88px;align-self:start}
+    .module-btn{border:1px solid var(--line);background:#fff;border-radius:15px;padding:13px;text-align:left;display:flex;gap:10px;align-items:flex-start}
+    .module-btn.active{border-color:#a9a3ff;background:var(--primary-soft)}
+    .module-btn.done{border-color:#bce8d6}
+    .module-index{width:27px;height:27px;flex:0 0 27px;border-radius:9px;background:var(--surface-2);display:grid;place-items:center;font-weight:900;font-size:12px}
+    .module-btn.active .module-index{background:var(--primary);color:#fff}
+    .module-content{min-width:0}
+    .module-meta{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 18px}
+    .lesson{padding:18px;border-radius:17px;background:#fafafe;border:1px solid var(--line);margin-bottom:12px}
+    .lesson h3{font-size:17px;margin-bottom:9px}
+    .lesson p{color:#444451}
+    .lesson ul{color:#444451}
+    .practice{padding:18px;border-radius:17px;background:var(--primary-soft);border:1px solid #d9d6ff;margin-top:14px}
+    .practice textarea{min-height:130px;background:#fff;margin-top:10px}
+    .readiness{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;padding:16px;border-radius:17px;background:var(--success-soft);margin-top:16px}
+    .readiness strong{font-size:23px;color:var(--success)}
+    .empty{padding:40px;text-align:center;color:var(--muted)}
+    footer{border-top:1px solid var(--line);padding:24px 0 36px;color:var(--muted);font-size:13px}
+    .footer-row{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}
+    .toast{position:fixed;right:18px;bottom:18px;z-index:100;background:#18181b;color:#fff;border-radius:14px;padding:12px 15px;box-shadow:var(--shadow);max-width:min(360px,calc(100% - 36px));opacity:0;transform:translateY(10px);pointer-events:none;transition:.2s ease}
+    .toast.show{opacity:1;transform:translateY(0)}
+    @media(max-width:900px){
+      .hero{grid-template-columns:1fr}.hero-card{min-height:auto}.grid-4{grid-template-columns:1fr 1fr}.demo-grid{grid-template-columns:1fr}.course-layout{grid-template-columns:1fr}.module-list{position:static;grid-template-columns:repeat(2,1fr)}
+    }
+    @media(max-width:640px){
+      .shell{width:min(100% - 22px,var(--max))}.topbar{height:60px}.brand span:last-child{font-size:14px}.badge{display:none}main{padding-top:18px}
+      .hero{padding-top:18px;gap:20px}.hero-card{border-radius:22px;padding:19px}.grid-4{grid-template-columns:1fr}.card{padding:17px;border-radius:20px}.form-grid,.inline-grid,.result-grid{grid-template-columns:1fr}.full{grid-column:auto}.verdict-top{grid-template-columns:1fr}.score-ring{width:88px;height:88px}.module-list{display:flex;overflow-x:auto;padding-bottom:5px}.module-btn{min-width:230px}.footer-row{flex-direction:column}.top-actions .btn-ghost{display:none}.hero-actions .btn{width:100%}
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="shell topbar">
+    <div class="brand"><div class="brand-mark">↗</div><span>Трек под вакансию</span></div>
+    <div class="top-actions"><span class="badge">● DEMO MODE</span><button class="btn btn-ghost" id="resetTop">Начать заново</button></div>
+  </div>
+</header>
+<main>
+  <div id="landing" class="shell">
+    <section class="hero">
+      <div>
+        <div class="eyebrow">Персональная адаптация под роль</div>
+        <h1>Не курс вообще. Подготовка под конкретную вакансию.</h1>
+        <p class="lead">Загрузите резюме и вакансию. Сервис честно оценит разрыв и соберёт персональный экспресс‑трек, только если это реалистично.</p>
+        <div class="hero-actions"><button class="btn btn-primary" data-scroll="workspace">Проверить вакансию</button><button class="btn btn-secondary" id="loadFastDemo">Запустить демо за минуту</button></div>
+      </div>
+      <aside class="hero-card" aria-label="Ключевые показатели продукта">
+        <div class="eyebrow" style="color:#c7c3ff">Сначала правда — потом обучение</div>
+        <div class="metric"><div><strong>4</strong><div class="muted-on-dark">варианта решения</div></div><div>GO / RISK<br>NO‑GO / DATA</div></div>
+        <div class="metric"><div><strong>1–14</strong><div class="muted-on-dark">дней подготовки</div></div><div>трек под реальный<br>бюджет времени</div></div>
+        <div class="metric"><div><strong>0</strong><div class="muted-on-dark">выдуманных достижений</div></div><div>опыт не<br>дорисовывается</div></div>
+      </aside>
+    </section>
+
+    <section class="section">
+      <div class="grid-4">
+        <article class="step-card"><div class="step-num">1</div><h3>Два документа</h3><p>Резюме кандидата и текст конкретной вакансии.</p></article>
+        <article class="step-card"><div class="step-num">2</div><h3>Карта разрыва</h3><p>Прямые совпадения, смежный опыт и критические пробелы.</p></article>
+        <article class="step-card"><div class="step-num">3</div><h3>Честный verdict</h3><p>Можно дотянуть, есть риски или экспресс‑формат не поможет.</p></article>
+        <article class="step-card"><div class="step-num">4</div><h3>Персональный трек</h3><p>Только релевантные знания, практика и подготовка к задачам роли.</p></article>
+      </div>
+    </section>
+
+    <section id="workspace" class="workspace card">
+      <div class="card-header"><div><h2>Проверить достижимость вакансии</h2><p class="card-subtitle">Демонстрационная версия работает локально в браузере и не отправляет резюме на сервер.</p></div></div>
+      <div class="tabs" role="tablist"><button class="tab active" data-tab="demo">Демо‑кейсы</button><button class="tab" data-tab="custom">Свои данные</button></div>
+      <div id="tab-demo">
+        <div class="demo-grid">
+          <button class="demo-card" data-demo="marketing"><span class="mini">GO_WITH_RISK</span><h3>Маркетолог → маркетинговый аналитик</h3><p>Сильная база в аналитике, но нужен SQL и продуктовый контекст.</p></button>
+          <button class="demo-card" data-demo="pmo"><span class="mini">NO_GO</span><h3>Координатор → Head of PMO</h3><p>Критический разрыв в people management и масштабе ответственности.</p></button>
+          <button class="demo-card" data-demo="frontend"><span class="mini">GO</span><h3>Junior frontend → Middle React</h3><p>Стек близок, закрываем тестирование и архитектурные паттерны.</p></button>
+        </div>
+      </div>
+      <div id="tab-custom" class="hidden">
+        <form id="intakeForm">
+          <div class="form-grid">
+            <div class="field"><label for="resume">Резюме</label><textarea id="resume" placeholder="Вставьте опыт, навыки, проекты и достижения…"></textarea><div class="file-row"><span class="hint">TXT можно прочитать прямо в браузере</span><input id="resumeFile" type="file" accept=".txt,.pdf,.doc,.docx" aria-label="Файл резюме"></div></div>
+            <div class="field"><label for="vacancy">Вакансия</label><textarea id="vacancy" placeholder="Вставьте обязанности, must-have и желательные требования…"></textarea><small>Чем полнее текст вакансии, тем точнее карта разрыва.</small></div>
+            <div class="inline-grid full">
+              <div class="field"><label for="days">Срок до собеседования</label><select id="days"><option>1</option><option>3</option><option selected>5</option><option>7</option><option>14</option></select></div>
+              <div class="field"><label for="hours">Часов в день</label><select id="hours"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>6</option><option>8</option></select></div>
+              <div class="field"><label for="format">Формат</label><select id="format"><option value="mixed">Смешанный</option><option value="practice">Больше практики</option><option value="text">Текстовый</option></select></div>
+            </div>
+            <div id="formError" class="notice error full hidden"></div>
+            <div class="full"><button class="btn btn-primary btn-block" type="submit">Проанализировать</button></div>
+          </div>
+        </form>
+      </div>
+    </section>
+  </div>
+
+  <section id="analysis" class="shell hidden"><div class="analysis-wrap card"><div class="spinner"></div><h2 style="text-align:center">Анализируем достижимость роли</h2><p class="card-subtitle" style="text-align:center">Сопоставляем требования с подтверждённым и смежным опытом.</p><div class="progress"><i id="analysisProgress"></i></div><div class="analysis-steps" id="analysisSteps"></div></div></section>
+
+  <section id="diagnostic" class="shell hidden"><div class="card"><div class="card-header"><div><span class="verdict-label verdict-data">Нужны данные</span><h2 style="margin-top:12px">Короткая диагностика</h2><p class="card-subtitle">Резюме упоминает часть навыков, но не доказывает глубину. Ответы уточнят verdict — они не превратятся в рабочий опыт.</p></div></div><form id="diagnosticForm"><div id="diagnosticQuestions" class="diagnostic-list"></div><button class="btn btn-primary btn-block" style="margin-top:18px">Уточнить результат</button></form></div></section>
+
+  <section id="verdict" class="shell hidden"><div class="card"><div class="verdict-top"><div><span id="verdictBadge" class="verdict-label"></span><h2 id="verdictTitle" style="margin-top:14px"></h2><p id="verdictSummary" class="lead" style="font-size:17px"></p></div><div id="scoreRing" class="score-ring"><strong id="scoreText">0%</strong></div></div><div id="resultGrid" class="result-grid"></div><div id="riskStrip" class="risk-strip"></div><div class="hero-actions" style="margin-top:22px"><button id="generateCourse" class="btn btn-primary">Сгенерировать персональный трек</button><button id="shareResult" class="btn btn-secondary">Поделиться результатом</button><button id="resetVerdict" class="btn btn-ghost">Начать заново</button></div></div></section>
+
+  <section id="course" class="shell hidden"><div class="card"><div class="card-header"><div><span class="badge">Персональный трек</span><h2 id="courseTitle" style="margin-top:12px"></h2><p id="courseSubtitle" class="card-subtitle"></p></div><button id="shareCourse" class="btn btn-secondary">Поделиться</button></div><div class="course-layout"><nav id="moduleList" class="module-list" aria-label="Модули курса"></nav><div id="moduleContent" class="module-content"></div></div></div></section>
+</main>
+<footer><div class="shell footer-row"><div><strong>Трек под вакансию</strong><div>Демонстрационный frontend Sprint 8</div></div><div>Решение не гарантирует трудоустройство и не подменяет реальный опыт, лицензии или портфолио.</div></div></footer>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script>
+(() => {
+  'use strict';
+  const $ = (s) => document.querySelector(s);
+  const $$ = (s) => [...document.querySelectorAll(s)];
+  const screens = ['landing','analysis','diagnostic','verdict','course'];
+  const STORAGE_KEY = 'vas-demo-state-v1';
+  const state = { input:null, result:null, course:null, activeModule:0, completed:[], diagnosticDone:false };
+
+  const skillGroups = {
+    analytics:['веб-аналит','web analytics','google analytics','яндекс метрик','метрика','ga4','аналитик','дашборд','dashboard','сегментац','a/b','ab test','эксперимент','excel','power bi','tableau'],
+    sql:['sql','postgres','clickhouse','bigquery'],
+    product:['продуктов','product analytics','юнит-эконом','retention','воронк','когорт','amplitude','mixpanel'],
+    marketing:['маркетинг','digital','performance','контекстн','таргет','seo','crm','email-маркетинг','рекламн'],
+    project:['project manager','проектн','jira','agile','scrum','kanban','планирован','stakeholder','рисками проекта','координатор'],
+    pmo:['pmo','портфел','program management','программами','проектный офис'],
+    management:['руководил команд','управлял команд','people management','найм','performance review','подчиненн','команда из','руководитель отдела','head of'],
+    budget:['бюджет','budget ownership','p&l','миллион','млн'],
+    frontend:['frontend','front-end','javascript','typescript','react','html','css','vite','webpack','redux','zustand'],
+    testing:['jest','vitest','cypress','playwright','testing library','unit test','тестирован'],
+    architecture:['архитектур','design pattern','паттерн','clean architecture','solid','state management'],
+    sales:['продаж','sales','crm','воронка продаж','переговор','клиент'],
+    hr:['рекрут','подбор персонала','hr','интервью','sourcing'],
+    certificate:['сертификат обязател','лицензи','допуск','аккредитац'],
+    portfolio:['портфолио','github обязател','кейсы обязательны','portfolio'],
+    experience:['лет опыта','года опыта','коммерческого опыта','commercial experience']
+  };
+
+  const roleProfiles = [
+    { id:'marketing-analyst', terms:['маркетинговый аналитик','marketing analyst'], must:['analytics','marketing'], desired:['sql','product'], label:'Маркетинговый аналитик' },
+    { id:'product-analyst', terms:['продуктовый аналитик','product analyst'], must:['analytics','sql','product'], desired:['testing'], label:'Продуктовый аналитик' },
+    { id:'pmo-head', terms:['head of pmo','руководитель pmo','директор проектного офиса'], must:['project','pmo','management'], desired:['budget'], label:'Head of PMO' },
+    { id:'middle-react', terms:['middle react','react developer','frontend developer','фронтенд разработчик'], must:['frontend'], desired:['testing','architecture'], label:'Middle React Developer' },
+    { id:'sales-manager', terms:['менеджер по продажам','sales manager'], must:['sales'], desired:['marketing'], label:'Менеджер по продажам' },
+    { id:'recruiter', terms:['рекрутер','hr recruiter'], must:['hr'], desired:['analytics'], label:'Рекрутер' },
+    { id:'project-manager', terms:['project manager','менеджер проектов'], must:['project'], desired:['management','budget'], label:'Project Manager' }
+  ];
+
+  const demos = {
+    marketing:{
+      resume:'Digital-маркетолог, 6 лет опыта. Запускал performance-кампании, работал с Google Analytics и Яндекс Метрикой, строил дашборды в Excel и Power BI, проводил A/B тесты посадочных страниц, сегментировал аудиторию и анализировал воронку. SQL использовал только на уровне простых учебных запросов.',
+      vacancy:'Маркетинговый аналитик. Must-have: веб-аналитика, сегментация, A/B тестирование, дашборды и понимание digital-маркетинга. Желательно: уверенный SQL, продуктовая аналитика, когортный анализ и работа с retention.',days:7,hours:2,format:'mixed'
+    },
+    pmo:{
+      resume:'Координатор проектов, 3 года. Вёл статусы задач в Jira, собирал отчётность, координировал подрядчиков, готовил протоколы встреч и контролировал сроки. Прямых подчинённых не было, портфелем проектов и бюджетом не управлял.',
+      vacancy:'Head of PMO. Обязательно: 5+ лет управления портфелем проектов, people management команды из 10 человек, внедрение governance, ответственность за бюджет 50 млн рублей, управление руководителями проектов.',days:14,hours:3,format:'mixed'
+    },
+    frontend:{
+      resume:'Frontend-разработчик, 2 года коммерческого опыта. JavaScript, TypeScript, React, HTML, CSS, Vite, REST API, Zustand. Самостоятельно разрабатывал интерфейсы и проводил code review. Мало опыта с unit-тестами и архитектурными паттернами.',
+      vacancy:'Middle React Developer. Требования: уверенный TypeScript и React, управление состоянием, REST API, code review. Желательно: Vitest или Jest, Testing Library, архитектурные паттерны и Playwright.',days:5,hours:3,format:'practice'
+    }
+  };
+
+  function normalize(t){ return (t||'').toLowerCase().replace(/ё/g,'е'); }
+  function hasGroup(text, group){ return skillGroups[group].some(x => text.includes(x)); }
+  function detectGroups(text){ const n=normalize(text); return Object.keys(skillGroups).filter(g=>hasGroup(n,g)); }
+  function inferRole(vacancy){ const v=normalize(vacancy); return roleProfiles.find(r=>r.terms.some(t=>v.includes(t))) || inferGenericRole(v); }
+  function inferGenericRole(v){
+    const required=[]; const desired=[];
+    for(const g of Object.keys(skillGroups)) if(hasGroup(v,g)) required.push(g);
+    return {id:'custom',terms:[],must:required.filter(g=>!['certificate','portfolio','experience'].includes(g)).slice(0,5),desired:[],label:'Выбранная роль'};
+  }
+  function labelGroup(g){ return ({analytics:'аналитика и работа с данными',sql:'SQL',product:'продуктовая аналитика',marketing:'digital-маркетинг',project:'управление проектами',pmo:'управление портфелем / PMO',management:'people management',budget:'ответственность за бюджет',frontend:'JavaScript / TypeScript / React',testing:'автоматизированное тестирование',architecture:'архитектурные паттерны',sales:'продажи и переговоры',hr:'рекрутинг',certificate:'обязательная лицензия или допуск',portfolio:'подтверждённое портфолио',experience:'требуемый коммерческий стаж'})[g]||g; }
+  function isUnbridgeable(g){ return ['management','pmo','budget','certificate','portfolio','experience'].includes(g); }
+  function buildResult(input, forceDiagnostic=false){
+    const rText=normalize(input.resume), vText=normalize(input.vacancy); const role=inferRole(vText);
+    const resumeGroups=detectGroups(rText), vacancyGroups=detectGroups(vText);
+    let must=[...new Set(role.must.length?role.must:vacancyGroups.filter(g=>!['certificate','portfolio','experience'].includes(g)))];
+    let desired=[...new Set([...role.desired,...vacancyGroups.filter(g=>!must.includes(g))])];
+    const matched=must.filter(g=>resumeGroups.includes(g));
+    const missing=must.filter(g=>!resumeGroups.includes(g));
+    const desiredMissing=desired.filter(g=>!resumeGroups.includes(g));
+    const explicitCritical=[];
+    if(hasGroup(vText,'certificate') && !hasGroup(rText,'certificate')) explicitCritical.push('certificate');
+    if(hasGroup(vText,'portfolio') && !hasGroup(rText,'portfolio')) explicitCritical.push('portfolio');
+    const demandsManagement=hasGroup(vText,'management');
+    if(demandsManagement && !hasGroup(rText,'management')) explicitCritical.push('management');
+    const demandsBudget=hasGroup(vText,'budget') && /(50\s*млн|100\s*млн|крупн|ответственност.{0,30}бюджет|p&l)/i.test(input.vacancy);
+    if(demandsBudget && !hasGroup(rText,'budget')) explicitCritical.push('budget');
+    const unbridgeable=[...new Set([...missing.filter(isUnbridgeable),...explicitCritical])];
+    const bridgeable=missing.filter(g=>!isUnbridgeable(g)).concat(desiredMissing.filter(g=>!isUnbridgeable(g))).slice(0,5);
+    const totalHours=Number(input.days)*Number(input.hours);
+    const weakMention=(rText.includes('учебн')||rText.includes('базов')||rText.includes('знаком')) && (resumeGroups.includes('sql')||resumeGroups.includes('testing')||resumeGroups.includes('management'));
+    let verdict='GO_WITH_RISK';
+    if(unbridgeable.length>=2) verdict='NO_GO';
+    else if(matched.length===0 && must.length>=2) verdict='NO_GO';
+    else if(!forceDiagnostic && weakMention && unbridgeable.length===0) verdict='INSUFFICIENT_DATA';
+    else if(unbridgeable.length===1) verdict='NO_GO';
+    else if(missing.length===0 && bridgeable.length<=2 && totalHours>=8) verdict='GO';
+    else if(matched.length>=Math.max(1,Math.ceil(must.length*.6)) && totalHours>=6) verdict='GO_WITH_RISK';
+    else if(totalHours<5 && bridgeable.length>0) verdict='NO_GO';
+    const fitBase=must.length?matched.length/must.length:0.45;
+    let score=Math.round((fitBase*.72 + Math.min(totalHours/28,1)*.18 + (bridgeable.length?0:.1))*100);
+    if(verdict==='NO_GO') score=Math.min(score,39); if(verdict==='INSUFFICIENT_DATA') score=Math.min(Math.max(score,42),64); if(verdict==='GO') score=Math.max(score,76); if(verdict==='GO_WITH_RISK') score=Math.min(Math.max(score,55),75);
+    const title={GO:'Реалистично дотянуть',GO_WITH_RISK:'Можно попробовать, но есть риски',NO_GO:'Экспресс‑курс не закроет критический разрыв',INSUFFICIENT_DATA:'Нужны дополнительные данные'}[verdict];
+    const summary={GO:'Базовый профиль близок к роли. Оставшиеся пробелы можно закрыть целевой подготовкой в доступный срок.',GO_WITH_RISK:'Сильная база есть, но часть требований останется зоной риска. Трек повысит готовность к интервью, не создавая несуществующий опыт.',NO_GO:'Критические требования относятся к реальному опыту или масштабу ответственности. Их нельзя честно заменить коротким курсом.',INSUFFICIENT_DATA:'Навыки упомянуты, но доказательств глубины недостаточно. Нужна короткая диагностика перед окончательным решением.'}[verdict];
+    return {role,verdict,title,summary,score,matched,missing,bridgeable,unbridgeable,desiredMissing,totalHours,confidence: verdict==='INSUFFICIENT_DATA'?'низкая':(must.length>=2?'высокая':'средняя'),minimumDays: verdict==='NO_GO'?(unbridgeable.length?'60–180 дней и практика':'21–45 дней'):Math.max(Number(input.days),Math.ceil((bridgeable.length*3)/Math.max(Number(input.hours),1)))};
+  }
+
+  function buildCourse(input,result){
+    if(result.verdict==='NO_GO'){
+      return {alternative:true,title:'Длинный маршрут к роли',subtitle:'Экспресс‑курс не создаст отсутствующий опыт. Ниже — честный маршрут перехода.',modules:[
+        module('01','Смежная роль как переходный шаг','Выберите позицию на один уровень ближе к текущему опыту.',['Сопоставьте 10 вакансий смежного уровня','Выделите повторяющиеся must-have','Соберите матрицу недостающих доказательств'],'Сформируйте shortlist из 5 достижимых вакансий.'),
+        module('02','Практический проект с проверяемым результатом','Создайте артефакт, который подтверждает навык, но не выдавайте его за коммерческий опыт.',['Поставьте измеримую задачу','Зафиксируйте ограничения','Подготовьте разбор решений'],'Соберите один портфельный кейс с исходными данными и выводами.'),
+        module('03','Наращивание масштаба ответственности','Получите реальные задачи, которых не хватает для целевой роли.',['Возьмите ответственность за участок','Ведите журнал решений','Соберите рекомендации и цифры'],'Составьте план получения опыта на 8–12 недель.')
+      ]};
+    }
+    const gaps=[...new Set(result.bridgeable.length?result.bridgeable:result.desiredMissing)].slice(0,4);
+    const modules=[];
+    modules.push(module('01','Контекст роли и карта ожиданий',`Разобраться, как работодатель понимает роль «${result.role.label}» и какие результаты ждёт в первые 90 дней.`,['Разделите обязанности на процессы и результаты','Выделите must-have и желательные требования','Подготовьте карту рисков кандидата'],'Составьте одностраничную карту роли и три приоритетных результата.'));
+    gaps.forEach((g,i)=>modules.push(module(String(i+2).padStart(2,'0'),`Закрыть пробел: ${labelGroup(g)}`,theoryFor(g),bulletsFor(g),practiceFor(g))));
+    modules.push(module(String(modules.length+1).padStart(2,'0'),'Интервью: честная упаковка опыта','Научиться связывать имеющийся опыт с задачами вакансии без выдуманных достижений.',['Структура ответа: контекст → действие → результат → вывод','Как обозначать смежный опыт','Как честно говорить о незакрытом риске'],'Подготовьте 3 ответа по STAR и один ответ на вопрос о главном пробеле.'));
+    return {alternative:false,title:`Экспресс‑трек: ${result.role.label}`,subtitle:`${modules.length} модулей · ${result.totalHours} часов доступно · формат: ${formatLabel(input.format)}`,modules};
+  }
+  function module(id,title,theory,bullets,practice){return {id,title,theory,bullets,practice,question:`Каким конкретным артефактом вы докажете результат модуля «${title}»?`};}
+  function theoryFor(g){return ({sql:'Освойте выборку, фильтрацию, агрегации, JOIN и проверку качества данных на задачах, близких к вакансии.',product:'Свяжите метрики продукта с поведением пользователя: воронка, retention, когорты и проверяемые гипотезы.',testing:'Соберите минимальную стратегию тестирования React-интерфейса: unit, component и e2e, без избыточного покрытия.',architecture:'Разберите границы компонентов, управление состоянием, побочные эффекты и решения, которые уменьшают связанность.',analytics:'Выстройте путь от бизнес-вопроса к метрике, данным, проверке и решению.',marketing:'Свяжите каналы, аудитории, экономику и измеримый результат кампании.',project:'Соберите управляемый контур: цель, scope, риски, зависимости и коммуникации.'})[g]||`Систематизируйте ${labelGroup(g)} применительно к задачам вакансии.`;}
+  function bulletsFor(g){return ({sql:['SELECT, WHERE, GROUP BY','JOIN и контроль дубликатов','Проверка результата запроса'],product:['Воронка и конверсия','Когортный анализ','Гипотеза и дизайн эксперимента'],testing:['Тестовая пирамида','Testing Library и пользовательское поведение','Playwright для критического потока'],architecture:['Границы компонентов','Локальное и глобальное состояние','Trade-offs и технический долг']})[g]||['Основные понятия','Типовые рабочие задачи','Ошибки и критерии качества'];}
+  function practiceFor(g){return ({sql:'На тестовом наборе данных напишите запрос с JOIN и агрегацией, затем объясните две проверки качества результата.',product:'Постройте воронку, сформулируйте гипотезу падения конверсии и предложите план проверки.',testing:'Спроектируйте тесты для формы входа: один component-тест и один e2e-сценарий.',architecture:'Разберите перегруженный React-компонент и предложите разделение ответственности с обоснованием.'})[g]||`Решите мини-кейс по теме «${labelGroup(g)}» и оформите ход решения.`;}
+  function formatLabel(v){return ({mixed:'смешанный',practice:'с акцентом на практику',text:'текстовый'})[v]||v;}
+
+  function showScreen(id){ screens.forEach(s=>$('#'+s).classList.toggle('hidden',s!==id)); window.scrollTo({top:0,behavior:'smooth'}); }
+  function save(){ localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); }
+  function load(){ try{const v=JSON.parse(localStorage.getItem(STORAGE_KEY));if(v&&v.input){Object.assign(state,v);return true}}catch(e){} return false; }
+  function reset(){ localStorage.removeItem(STORAGE_KEY); Object.assign(state,{input:null,result:null,course:null,activeModule:0,completed:[],diagnosticDone:false}); showScreen('landing'); }
+  function toast(msg){ const el=$('#toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200); }
+  function esc(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+  function list(items,empty='Нет'){return `<ul>${(items.length?items:[empty]).map(x=>`<li>${esc(labelGroup(x))}</li>`).join('')}</ul>`;}
+
+  async function runAnalysis(input){
+    state.input=input; state.result=null;state.course=null;state.completed=[];state.activeModule=0;save();showScreen('analysis');
+    const steps=['Разбираем опыт','Анализируем вакансию','Проверяем пробелы','Формируем решение'];
+    $('#analysisSteps').innerHTML=steps.map((s,i)=>`<div class="analysis-step" data-step="${i}"><span class="dot">${i+1}</span>${s}</div>`).join('');
+    for(let i=0;i<steps.length;i++){
+      $$('.analysis-step').forEach((x,j)=>{x.classList.toggle('done',j<i);x.classList.toggle('active',j===i);x.querySelector('.dot').textContent=j<i?'✓':j+1});
+      $('#analysisProgress').style.width=`${(i+1)*25}%`; await new Promise(r=>setTimeout(r,420));
+    }
+    state.result=buildResult(input,state.diagnosticDone);save();
+    if(state.result.verdict==='INSUFFICIENT_DATA'&&!state.diagnosticDone) renderDiagnostic(); else renderVerdict();
+  }
+  function renderDiagnostic(){
+    const qs=[
+      {q:'Как вы обычно подтверждаете качество результата аналитической или технической задачи?',o:['Проверяю данные/код и объясняю критерии','Ориентируюсь на визуально правдоподобный результат','Такого опыта пока не было']},
+      {q:'Есть ли у вас рабочий артефакт по спорному навыку?',o:['Да, могу объяснить контекст и ограничения','Есть только учебный пример','Нет']},
+      {q:'Насколько самостоятельно вы выполняли задачу?',o:['От постановки до проверки результата','Выполнял часть по инструкции','Только изучал теорию']}
+    ];
+    $('#diagnosticQuestions').innerHTML=qs.map((x,i)=>`<div class="question"><p>${i+1}. ${esc(x.q)}</p><div class="options">${x.o.map((o,j)=>`<label class="option"><input type="radio" name="q${i}" value="${j}" required><span>${esc(o)}</span></label>`).join('')}</div></div>`).join('');showScreen('diagnostic');
+  }
+  function renderVerdict(){
+    const r=state.result; const cls={GO:'verdict-go',GO_WITH_RISK:'verdict-risk',NO_GO:'verdict-no',INSUFFICIENT_DATA:'verdict-data'}[r.verdict];
+    $('#verdictBadge').className=`verdict-label ${cls}`;$('#verdictBadge').textContent=r.verdict;$('#verdictTitle').textContent=r.title;$('#verdictSummary').textContent=r.summary;
+    $('#scoreRing').style.setProperty('--score',`${r.score}%`);$('#scoreText').textContent=`${r.score}%`;
+    $('#resultGrid').innerHTML=`
+      <div class="result-box"><h3>Сильные стороны</h3>${list(r.matched,'Нет надёжно подтверждённых совпадений')}</div>
+      <div class="result-box"><h3>Что реально закрыть курсом</h3>${list(r.bridgeable,'Критические учебные пробелы не выявлены')}</div>
+      <div class="result-box"><h3>Критические разрывы</h3>${list(r.unbridgeable,'Стоп‑факторов нет')}</div>
+      <div class="result-box"><h3>Рамки решения</h3><ul><li>Доступно: ${r.totalHours} ч.</li><li>Минимальный горизонт: ${esc(r.minimumDays)}</li><li>Confidence: ${r.confidence}</li></ul></div>`;
+    $('#riskStrip').innerHTML=[...r.missing,...r.desiredMissing].slice(0,6).map(x=>`<span class="chip">${esc(labelGroup(x))}</span>`).join('');
+    $('#generateCourse').textContent=r.verdict==='NO_GO'?'Показать честный длинный маршрут':'Сгенерировать персональный трек';
+    showScreen('verdict');
+  }
+  function renderCourse(){
+    const c=state.course;$('#courseTitle').textContent=c.title;$('#courseSubtitle').textContent=c.subtitle;
+    $('#moduleList').innerHTML=c.modules.map((m,i)=>`<button class="module-btn ${i===state.activeModule?'active':''} ${state.completed.includes(i)?'done':''}" data-module="${i}"><span class="module-index">${state.completed.includes(i)?'✓':m.id}</span><span><strong>${esc(m.title)}</strong><small style="display:block;color:var(--muted);margin-top:4px">${state.completed.includes(i)?'Пройден':'Открыть модуль'}</small></span></button>`).join('');
+    const m=c.modules[state.activeModule];const done=state.completed.includes(state.activeModule);const readiness=Math.min(92,42+state.completed.length*Math.round(50/c.modules.length));
+    $('#moduleContent').innerHTML=`<div class="module-meta"><span class="chip">Модуль ${m.id}</span><span class="chip">${c.alternative?'длинный маршрут':'вакансия‑специфичный'}</span></div><h2>${esc(m.title)}</h2><div class="lesson"><h3>Цель и теория</h3><p>${esc(m.theory)}</p><ul>${m.bullets.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div><div class="practice"><h3>Практика</h3><p>${esc(m.practice)}</p><textarea id="practiceAnswer" placeholder="Опишите решение, артефакт или план действий…">${done?'Модуль пройден в демонстрационном режиме.':''}</textarea><p class="hint" style="margin-top:10px">Контрольный вопрос: ${esc(m.question)}</p><button id="completeModule" class="btn btn-primary" style="margin-top:13px">${done?'Пройдено — перейти дальше':'Сдать модуль'}</button></div><div class="readiness"><strong>${readiness}%</strong><div><b>Готовность к интервью</b><p class="hint">Учебный прогресс повышает готовность отвечать на вопросы, но не превращается в коммерческий опыт.</p></div></div>`;
+    showScreen('course');save();
+  }
+  async function share(text){
+    const data={title:'Трек под вакансию',text,url:location.href};
+    try{if(navigator.share)await navigator.share(data);else{await navigator.clipboard.writeText(`${text}\n${location.href}`);toast('Ссылка и результат скопированы')}}catch(e){if(e.name!=='AbortError')toast('Не удалось поделиться');}
+  }
+
+  $$('[data-scroll]').forEach(b=>b.onclick=()=>document.getElementById(b.dataset.scroll).scrollIntoView({behavior:'smooth'}));
+  $$('.tab').forEach(t=>t.onclick=()=>{$$('.tab').forEach(x=>x.classList.toggle('active',x===t));$('#tab-demo').classList.toggle('hidden',t.dataset.tab!=='demo');$('#tab-custom').classList.toggle('hidden',t.dataset.tab!=='custom')});
+  $$('.demo-card').forEach(b=>b.onclick=()=>runAnalysis({...demos[b.dataset.demo]}));
+  $('#loadFastDemo').onclick=()=>runAnalysis({...demos.marketing});
+  $('#intakeForm').onsubmit=e=>{e.preventDefault();const input={resume:$('#resume').value.trim(),vacancy:$('#vacancy').value.trim(),days:Number($('#days').value),hours:Number($('#hours').value),format:$('#format').value};const err=$('#formError');if(input.resume.length<50||input.vacancy.length<50){err.textContent='Добавьте более полный текст резюме и вакансии — минимум по 50 символов.';err.classList.remove('hidden');return}err.classList.add('hidden');state.diagnosticDone=false;runAnalysis(input)};
+  $('#resumeFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;if(f.name.toLowerCase().endsWith('.txt')){$('#resume').value=await f.text();toast('TXT-файл прочитан')}else toast('PDF/DOCX в этой публичной демо-версии: вставьте текст резюме вручную')};
+  $('#diagnosticForm').onsubmit=e=>{e.preventDefault();const answers=[0,1,2].map(i=>document.querySelector(`input[name=q${i}]:checked`)?.value);if(answers.some(x=>x===undefined))return;state.diagnosticDone=true;const strong=answers.filter(x=>x==='0').length>=2;state.result=buildResult(state.input,true);if(!strong&&state.result.verdict==='GO')state.result.verdict='GO_WITH_RISK';state.result.title=state.result.verdict==='GO'?'Реалистично дотянуть':'Можно попробовать, но есть риски';state.result.summary=strong?'Диагностика подтверждает самостоятельное понимание спорных навыков. Учебный трек остаётся ограниченным рамками реального опыта.':'Теоретическая база есть, но evidence остаётся слабым. Трек подготовит к вопросам, однако риск работодателя сохраняется.';save();renderVerdict()};
+  $('#generateCourse').onclick=()=>{state.course=buildCourse(state.input,state.result);state.activeModule=0;state.completed=[];save();renderCourse()};
+  $('#shareResult').onclick=()=>share(`${state.result.title}. Fit score: ${state.result.score}%. ${state.result.summary}`);
+  $('#shareCourse').onclick=()=>share(`${state.course.title}. Персональный трек сформирован под конкретную вакансию.`);
+  $('#resetTop').onclick=$('#resetVerdict').onclick=reset;
+  $('#moduleList').onclick=e=>{const b=e.target.closest('[data-module]');if(b){state.activeModule=Number(b.dataset.module);renderCourse()}};
+  $('#moduleContent').onclick=e=>{if(e.target.id==='completeModule'){const ans=$('#practiceAnswer').value.trim();if(ans.length<15&&!state.completed.includes(state.activeModule)){toast('Добавьте краткое решение — минимум 15 символов');return}if(!state.completed.includes(state.activeModule))state.completed.push(state.activeModule);if(state.activeModule<state.course.modules.length-1)state.activeModule++;save();renderCourse();toast('Прогресс сохранён')}};
+
+  if(load()){
+    if(state.course)renderCourse();else if(state.result)renderVerdict();else showScreen('landing');
+  }
+})();
+</script>
+</body>
+</html>
