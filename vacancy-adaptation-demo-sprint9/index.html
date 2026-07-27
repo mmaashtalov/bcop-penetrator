@@ -1,0 +1,49 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Трек под вакансию — Sprint 9</title><style>body{font-family:system-ui,sans-serif;padding:32px;background:#f7f7fb;color:#18181b}.load{max-width:620px;margin:15vh auto;background:#fff;padding:24px;border-radius:20px;border:1px solid #e5e7ef}</style></head><body><div class="load"><h1>Загружаем демо Sprint 9…</h1><p>Аналитика, персональный трек и пакет отклика работают локально в браузере.</p></div><script>
+const BASE='https://raw.githubusercontent.com/mmaashtalov/bcop-penetrator/main/vacancy-adaptation-demo/index.html';
+const patch=String.raw`
+<style>
+.application-layout{display:grid;gap:14px}.artifact-card{border:1px solid var(--line);border-radius:18px;padding:18px;background:#fff}.artifact-card header{position:static;background:transparent;border:0;backdrop-filter:none;display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:13px}.artifact-card h3{font-size:18px}.artifact-body{white-space:pre-wrap;color:#3f3f49;line-height:1.62}.artifact-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.s9-note{padding:13px 15px;border-radius:14px;background:var(--success-soft);color:var(--success);margin-bottom:14px;font-size:13px}.copy-s9{border:1px solid var(--line);background:#fff;border-radius:11px;padding:8px 10px;font-weight:800}.s9-button{margin-left:8px}@media(max-width:700px){.artifact-grid{grid-template-columns:1fr}.s9-button{margin-left:0;margin-top:8px;width:100%}}
+</style>
+<section id="applicationS9" class="shell hidden"><div class="card"><div class="card-header"><div><span class="badge" style="display:inline-flex">Sprint 9</span><h2 style="margin-top:12px">Пакет отклика под вакансию</h2><p class="card-subtitle">Формируется только из текста резюме. Новые компании, должности и достижения не добавляются.</p></div><button id="s9Back" class="btn btn-secondary">Назад</button></div><div id="s9Application" class="application-layout"></div></div></section>
+<script>
+(()=>{
+ const KEY='vas-demo-state-v1';
+ const esc=s=>String(s||'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));
+ const read=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'null')}catch{return null}};
+ const sentences=t=>String(t||'').split(/(?<=[.!?])\\s+|\\n+/).map(x=>x.trim()).filter(x=>x.length>28).slice(0,6);
+ const role=s=>s?.result?.role?.label||'выбранную роль';
+ function build(s){
+   const facts=sentences(s?.input?.resume); const first=facts[0]||'Профиль кандидата представлен в загруженном резюме.'; const second=facts[1]||first; const third=facts[2]||second; const r=role(s);
+   const strengths=(s?.result?.matched||[]).map(x=>x.replaceAll('_',' ')).slice(0,4);
+   const risks=(s?.result?.missing||[]).concat(s?.result?.desiredMissing||[]).slice(0,4);
+   return {
+    resume:'ЦЕЛЕВАЯ РОЛЬ: '+r+'\\n\\nПРОФЕССИОНАЛЬНЫЙ ПРОФИЛЬ\\n'+first+'\\n\\nРЕЛЕВАНТНЫЙ ОПЫТ\\n• '+facts.join('\\n• ')+'\\n\\nАКЦЕНТЫ ПОД ВАКАНСИЮ\\n• '+(strengths.join('\\n• ')||'Релевантные акценты определяются по исходному резюме.'),
+    letter:'Здравствуйте!\\n\\nОткликаюсь на позицию «'+r+'». '+first+' '+second+'\\n\\nМой опыт наиболее релевантен задачам вакансии в следующих аспектах: '+(strengths.join(', ')||'профильные задачи, указанные в резюме')+'. Готов предметно обсудить выполненные задачи, ограничения и результаты без приписывания себе отсутствующего опыта.\\n\\nС уважением.',
+    pitch30:'Я рассматриваю роль «'+r+'». '+first+' '+second+' Моя сильная сторона — способность быстро входить в контекст задачи и подтверждать компетенции конкретными примерами из резюме.',
+    pitch90:'Я рассматриваю роль «'+r+'», потому что мой текущий профиль частично совпадает с её задачами. '+facts.slice(0,3).join(' ')+' На собеседовании я готов подробно разобрать реальные кейсы, свою степень самостоятельности и способы проверки результата. Зоны развития: '+(risks.join(', ')||'углубление требований конкретной вакансии')+'. Я не подменяю их несуществующим опытом, а закрываю знания и терминологию персональным треком.',
+    questions:[
+      ['Расскажите о наиболее релевантном кейсе.','Опирайтесь на конкретный фрагмент резюме: '+third],
+      ['Чего вам пока не хватает для этой роли?','Назовите честно: '+(risks.join(', ')||'часть специфического контекста вакансии')+'. Затем объясните план подготовки.'],
+      ['Почему мы должны рассмотреть вас сейчас?','Покажите переносимый опыт, реальные артефакты и скорость освоения, не заявляя отсутствующие достижения.'],
+      ['Как вы проверяете качество своей работы?','Опишите критерии, способ проверки и ограничения на примере из резюме.']
+    ]
+   }
+ }
+ function card(id,title,text){return '<article class="artifact-card"><header><h3>'+esc(title)+'</h3><button class="copy-s9" data-copy="'+id+'">Копировать</button></header><div class="artifact-body" id="'+id+'">'+esc(text)+'</div></article>'}
+ function show(){
+   const s=read(); if(!s?.input){alert('Сначала запустите анализ резюме и вакансии.');return} const p=build(s);
+   document.querySelectorAll('#landing,main>section').forEach(x=>x.classList.add('hidden')); const app=document.getElementById('applicationS9');app.classList.remove('hidden');
+   document.getElementById('s9Application').innerHTML='<div class="s9-note">Пакет собран из фрагментов исходного резюме. Проверьте формулировки перед отправкой работодателю.</div><div class="artifact-grid">'+card('s9resume','Адаптированное резюме',p.resume)+card('s9letter','Сопроводительное письмо',p.letter)+card('s9p30','Самопрезентация — 30 секунд',p.pitch30)+card('s9p90','Самопрезентация — 90 секунд',p.pitch90)+'</div><article class="artifact-card"><header><h3>Interview pack</h3></header>'+p.questions.map(q=>'<div class="lesson"><b>'+esc(q[0])+'</b><p>'+esc(q[1])+'</p></div>').join('')+'</article>';
+   window.scrollTo({top:0,behavior:'smooth'});
+ }
+ function init(){
+   const verdict=document.querySelector('#verdict .hero-actions'); if(verdict&&!document.getElementById('s9FromVerdict')){const b=document.createElement('button');b.id='s9FromVerdict';b.className='btn btn-secondary s9-button';b.textContent='Пакет отклика';b.onclick=show;verdict.insertBefore(b,verdict.children[1]||null)}
+   const course=document.querySelector('#course .top-actions'); if(course&&!document.getElementById('s9FromCourse')){const b=document.createElement('button');b.id='s9FromCourse';b.className='btn btn-primary';b.textContent='Пакет отклика';b.onclick=show;course.prepend(b)}
+   document.getElementById('s9Back').onclick=()=>{document.getElementById('applicationS9').classList.add('hidden');const s=read();document.getElementById(s?.course?'course':'verdict').classList.remove('hidden')};
+   document.getElementById('s9Application').onclick=e=>{const b=e.target.closest('[data-copy]');if(!b)return;const t=document.getElementById(b.dataset.copy)?.innerText||'';navigator.clipboard.writeText(t).then(()=>alert('Скопировано'))};
+ }
+ setTimeout(init,0);
+})();
+<\/script>`;
+fetch(BASE).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.text()}).then(html=>{html=html.replace('</body>',patch+'</body>');document.open();document.write(html);document.close()}).catch(e=>{document.body.innerHTML='<div class="load"><h1>Не удалось загрузить демо</h1><p>'+e.message+'</p><p><a href="'+BASE+'">Открыть базовую версию</a></p></div>'});
+</script></body></html>
