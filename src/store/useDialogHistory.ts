@@ -12,12 +12,15 @@ interface HistoryState {
   sessions: DialogSession[];
   currentSessionId: string | null;
   currentGoal: DialogueGoal;
+  persistHistory: boolean;
   setGoal: (goal: DialogueGoal) => void;
+  setPersistHistory: (enabled: boolean) => void;
   setCurrentSession: (id: string) => void;
   createNewSession: () => string;
   appendMessage: (message: AnalysisMessage) => void;
   updateMessage: (id: string, updates: Partial<AnalysisMessage>) => void;
   clearCurrentSession: () => void;
+  clearAllDialogs: () => void;
 }
 
 function createId(): string {
@@ -29,14 +32,20 @@ function createSession(): DialogSession {
   return { id: createId(), startTime: Date.now(), messages: [] };
 }
 
+function isDialogueGoal(value: unknown): value is DialogueGoal {
+  return value === 'gather_info' || value === 'reduce_pressure' || value === 'buy_time' || value === 'end_contact';
+}
+
 export const useDialogHistory = create<HistoryState>()(
   persist(
     (set, get) => ({
       sessions: [],
       currentSessionId: null,
       currentGoal: 'gather_info',
+      persistHistory: false,
 
       setGoal: (goal) => set({ currentGoal: goal }),
+      setPersistHistory: (enabled) => set({ persistHistory: enabled }),
 
       setCurrentSession: (id) => {
         if (get().sessions.some((session) => session.id === id)) {
@@ -80,14 +89,30 @@ export const useDialogHistory = create<HistoryState>()(
           session.id === state.currentSessionId ? { ...session, messages: [] } : session
         )),
       })),
+
+      clearAllDialogs: () => set({ sessions: [], currentSessionId: null }),
     }),
     {
       name: 'bcop-dialogue-history-v1',
       storage: createJSONStorage(() => localStorage),
+      version: 2,
+      migrate: (persistedState, version) => {
+        const previous = persistedState as Partial<HistoryState>;
+        if (version < 2) {
+          return {
+            sessions: [],
+            currentSessionId: null,
+            currentGoal: isDialogueGoal(previous.currentGoal) ? previous.currentGoal : 'gather_info',
+            persistHistory: false,
+          };
+        }
+        return persistedState as HistoryState;
+      },
       partialize: (state) => ({
-        sessions: state.sessions,
-        currentSessionId: state.currentSessionId,
+        sessions: state.persistHistory ? state.sessions : [],
+        currentSessionId: state.persistHistory ? state.currentSessionId : null,
         currentGoal: state.currentGoal,
+        persistHistory: state.persistHistory,
       }),
     },
   ),

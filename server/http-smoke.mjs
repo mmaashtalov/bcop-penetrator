@@ -58,6 +58,24 @@ try {
     ['calm', 'firm', 'documents'],
   );
 
+  const privacy = await fetchJson(baseUrl, '/api/dialogue/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      goal: 'gather_info',
+      incomingMessage: 'Мой телефон +7 (999) 123-45-67, email person@example.com, карта 4276 1234 5678 9012.',
+      history: [],
+    }),
+  });
+  const privacyBody = JSON.stringify(privacy.body);
+  assert.equal(privacy.response.status, 200);
+  assert.equal(privacy.response.headers.get('cache-control'), 'no-store');
+  assert.ok(privacy.response.headers.get('x-request-id'));
+  assert.match(privacyBody, /\[ТЕЛЕФОН\]/);
+  assert.match(privacyBody, /\[ЭЛЕКТРОННАЯ_ПОЧТА\]/);
+  assert.match(privacyBody, /\[БАНКОВСКАЯ_КАРТА\]/);
+  assert.doesNotMatch(privacyBody, /999\) 123|person@example\.com|4276 1234/);
+
   const invalid = await fetchJson(baseUrl, '/api/dialogue/analyze', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -66,7 +84,7 @@ try {
   assert.equal(invalid.response.status, 400);
   assert.equal(invalid.body.error, 'Неизвестная цель диалога.');
 
-  console.log('HTTP smoke test passed: health, demo analysis, invalid request.');
+  console.log('HTTP smoke test passed: health, demo analysis, privacy masking, invalid request.');
 } finally {
   await closeServer(server);
 }

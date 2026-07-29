@@ -1,11 +1,13 @@
 import { AnalyzeDialogueRequest, AnalyzeDialogueResponse } from '../types/response';
+import { prepareDialogueForAnalysis } from '../lib/anonymizer';
 
 const API_URL = '/api/dialogue/analyze';
 
 export async function analyzeDialogue(
   request: AnalyzeDialogueRequest,
 ): Promise<AnalyzeDialogueResponse> {
-  const history = request.history.map(({ id, author, originalText, timestamp }) => ({
+  const anonymized = prepareDialogueForAnalysis(request).value;
+  const history = anonymized.history.map(({ id, author, originalText, timestamp }) => ({
     id,
     author,
     originalText,
@@ -14,7 +16,7 @@ export async function analyzeDialogue(
   const response = await fetch(API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...request, history }),
+    body: JSON.stringify({ ...anonymized, history }),
   });
 
   let payload: unknown = null;

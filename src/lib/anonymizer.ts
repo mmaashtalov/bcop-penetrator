@@ -1,6 +1,17 @@
-export function sanitize(text: string) {
-    if (!text) return "";
-    return text
-      .replace(/\d{10,}/g, "[REDACTED]")  // телефоны, карты
-      .replace(/\b[А-ЯЁ][а-яё]+ [А-ЯЁ]\.[А-ЯЁ]\./g, "[NAME]"); // ФИО (Иванов И.И.)
-  }
+import {
+  anonymizeDialogueContext,
+  anonymizeText,
+  describeRedactions,
+} from '../../shared/privacy.mjs';
+import { AnalyzeDialogueRequest } from '../types/response';
+
+export { anonymizeText, describeRedactions };
+
+export function prepareDialogueForAnalysis(request: AnalyzeDialogueRequest) {
+  return anonymizeDialogueContext(request);
+}
+
+// Совместимость со старым именем: в новом контуре используем anonymizeText.
+export function sanitize(text: string): string {
+  return anonymizeText(text).text;
+}

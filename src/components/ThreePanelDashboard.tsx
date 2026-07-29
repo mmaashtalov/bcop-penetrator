@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { analyzeDialogue } from '../analysis/analysis-engine-core';
+import { describeRedactions, prepareDialogueForAnalysis } from '../lib/anonymizer';
 import { useDialogHistory } from '../store/useDialogHistory';
 import { AnalysisMessage, DialogueAnalysis, ResponseOption } from '../types/response';
 import DialogSidebar from './DialogSidebar';
@@ -8,11 +9,19 @@ import ChatMessage from './ChatMessage';
 import ControlPanel from './ControlPanel';
 import ResponseSelect from './ResponseSelect';
 import MessageInput from './MessageInput';
+import PrivacyReviewDialog from './PrivacyReviewDialog';
 import { Card } from './ui/Card';
 
 function createId(): string {
   if (typeof globalThis.crypto?.randomUUID === 'function') return globalThis.crypto.randomUUID();
   return `message-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+interface PendingSubmission {
+  text: string;
+  preview: string;
+  totalRedactions: number;
+  redactionDetails: string[];
 }
 
 export default function ThreePanelDashboard() {
@@ -24,6 +33,7 @@ export default function ThreePanelDashboard() {
     appendMessage,
     updateMessage,
     clearCurrentSession,
+    clearAllDialogs,
   } = useDialogHistory();
   const currentSession = useMemo(
     () => sessions.find((session) => session.id === currentSessionId) ?? null,
@@ -35,6 +45,8 @@ export default function ThreePanelDashboard() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [mode, setMode] = useState<'ai' | 'demo' | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [draft, setDraft] = useState('');
+  const [pendingSubmission, setPendingSubmission] = useState<PendingSubmission | null>(null);
 
   useEffect(() => {
     if (!currentSessionId) createNewSession();
@@ -47,6 +59,7 @@ export default function ThreePanelDashboard() {
     const nextAnalysis = latestAnalyzed?.analysis ?? null;
     setAnalysis(nextAnalysis);
     setResponses(nextAnalysis?.response_options ?? []);
+    setMode(null);
     setErrorMessage(null);
   }, [currentSession]);
 
@@ -92,6 +105,41 @@ export default function ThreePanelDashboard() {
     appendMessage(selectedMessage);
   };
 
+  const requestPrivacyReview = () => {
+    const text = draft.trim();
+    if (!text || isAnalyzing) return;
+
+    const prepared = prepareDialogueForAnalysis({
+      goal: currentGoal,
+      incomingMessage: text,
+      history: currentSession?.messages ?? [],
+    });
+    setPendingSubmission({
+      text,
+      preview: prepared.value.incomingMessage,
+      totalRedactions: prepared.totalRedactions,
+      redactionDetails: describeRedactions(prepared.redactions),
+    });
+  };
+
+  const confirmPrivacyReview = () => {
+    if (!pendingSubmission) return;
+    const { text } = pendingSubmission;
+    setPendingSubmission(null);
+    setDraft('');
+    void handleSendMessage(text);
+  };
+
+  const handleDeleteAll = () => {
+    const confirmed = window.confirm('Удалить все диалоги с этого устройства? Восстановить тексты после удаления нельзя.');
+    if (!confirmed) return;
+    clearAllDialogs();
+    setAnalysis(null);
+    setResponses([]);
+    setMode(null);
+    setErrorMessage(null);
+  };
+
   const chatEndRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -102,7 +150,11 @@ export default function ThreePanelDashboard() {
       <HeaderBar />
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 p-2 lg:grid-cols-[250px_minmax(0,1fr)_370px] lg:p-3">
         <aside className="order-2 flex min-w-0 flex-col gap-3 lg:order-1">
-          <DialogSidebar messageCount={currentSession?.messages.length ?? 0} sessionCount={sessions.length} />
+          <DialogSidebar
+            messageCount={currentSession?.messages.length ?? 0}
+            sessionCount={sessions.length}
+            onDeleteAll={handleDeleteAll}
+          />
           <button
             type="button"
             onClick={() => createNewSession()}
@@ -137,7 +189,12 @@ export default function ThreePanelDashboard() {
               <div ref={chatEndRef} />
             </Card>
           </div>
-          <MessageInput onSendMessage={(text) => { void handleSendMessage(text); }} disabled={isAnalyzing} />
+          <MessageInput
+            value={draft}
+            onChange={setDraft}
+            onSendMessage={requestPrivacyReview}
+            disabled={isAnalyzing || Boolean(pendingSubmission)}
+          />
         </main>
 
         <aside className="order-3 flex min-w-0 flex-col gap-3">
@@ -153,6 +210,15 @@ export default function ThreePanelDashboard() {
           </p>
         </aside>
       </div>
+      {pendingSubmission && (
+        <PrivacyReviewDialog
+          preview={pendingSubmission.preview}
+          totalRedactions={pendingSubmission.totalRedactions}
+          redactionDetails={pendingSubmission.redactionDetails}
+          onCancel={() => setPendingSubmission(null)}
+          onConfirm={confirmPrivacyReview}
+        />
+      )}
     </div>
   );
 }
