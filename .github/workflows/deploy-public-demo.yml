@@ -60,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment:
-      name: github-pages
+      name: bcop-public-demo-preview
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
