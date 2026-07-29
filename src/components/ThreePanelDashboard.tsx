@@ -1,147 +1,224 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { v4 as uuidv4 } from 'uuid'; // <--- ДОБАВЬТЕ ЭТУ СТРОКУ
-import { useMessageStore } from '../store/messageStore';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { analyzeDialogue } from '../analysis/analysis-engine-core';
+import { describeRedactions, prepareDialogueForAnalysis } from '../lib/anonymizer';
 import { useDialogHistory } from '../store/useDialogHistory';
-import { GeneratedResponses, AnalysisMessage, AdaptedAnalysisResult, AnalysisResult } from '../types/response';
-
-// Адаптер для преобразования AdaptedAnalysisResult в AnalysisDetails
-function adaptAnalysisForControlPanel(analysis: AdaptedAnalysisResult | null) {
-  if (!analysis) return null;
-  
-  return {
-    vulnerabilities: analysis.strategicOpportunities || [],
-    persuasionTactics: analysis.recommendations || [],
-    psychologicalPrinciples: analysis.goalAlignment?.suggestions || [],
-    dialogueState: analysis.goalStrategy || 'Unknown',
-    reasoning: analysis.goalAlignment?.missedOpportunities?.join(', ') || undefined
-  };
-}
-// ... остальной код импортов
-import { analyzeMessage } from '../analysis/analysis-engine-core';
-import { generateResponses } from '../analysis/response-generator';
-import { adaptAnalysisForGoal } from '../goal-engine';
+import { AnalysisMessage, DialogueAnalysis, ResponseOption } from '../types/response';
 import DialogSidebar from './DialogSidebar';
 import HeaderBar from './HeaderBar';
 import ChatMessage from './ChatMessage';
 import ControlPanel from './ControlPanel';
 import ResponseSelect from './ResponseSelect';
 import MessageInput from './MessageInput';
+import PrivacyReviewDialog from './PrivacyReviewDialog';
 import { Card } from './ui/Card';
+
+function createId(): string {
+  if (typeof globalThis.crypto?.randomUUID === 'function') return globalThis.crypto.randomUUID();
+  return `message-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+interface PendingSubmission {
+  text: string;
+  preview: string;
+  totalRedactions: number;
+  redactionDetails: string[];
+}
 
 export default function ThreePanelDashboard() {
   const {
-    messages,
-    addMessage,
+    sessions,
+    currentSessionId,
+    currentGoal,
+    createNewSession,
+    appendMessage,
     updateMessage,
-  } = useMessageStore();
-
-  const {
-    currentSession,
-    setCurrentSession,
+    clearCurrentSession,
+    clearAllDialogs,
   } = useDialogHistory();
-  
-  const [analysis, setAnalysis] = useState<AdaptedAnalysisResult | null>(null);
-  const [responses, setResponses] = useState<GeneratedResponses | null>(null);
+  const currentSession = useMemo(
+    () => sessions.find((session) => session.id === currentSessionId) ?? null,
+    [sessions, currentSessionId],
+  );
+
+  const [analysis, setAnalysis] = useState<DialogueAnalysis | null>(null);
+  const [responses, setResponses] = useState<ResponseOption[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [mode, setMode] = useState<'ai' | 'demo' | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [draft, setDraft] = useState('');
+  const [pendingSubmission, setPendingSubmission] = useState<PendingSubmission | null>(null);
 
   useEffect(() => {
-    if (!currentSession) {
-      const newSessionId = uuidv4();
-      setCurrentSession(newSessionId);
-    }
-  }, [currentSession, setCurrentSession]);
+    if (!currentSessionId) createNewSession();
+  }, [currentSessionId, createNewSession]);
+
+  useEffect(() => {
+    const latestAnalyzed = [...(currentSession?.messages ?? [])]
+      .reverse()
+      .find((message) => message.analysis);
+    const nextAnalysis = latestAnalyzed?.analysis ?? null;
+    setAnalysis(nextAnalysis);
+    setResponses(nextAnalysis?.response_options ?? []);
+    setMode(null);
+    setErrorMessage(null);
+  }, [currentSession]);
 
   const handleSendMessage = async (text: string) => {
-    setIsAnalyzing(true);
-    setAnalysis(null);
-    setResponses(null);
-
-    const newMessage: AnalysisMessage = {
-      id: uuidv4(),
+    const incomingMessage: AnalysisMessage = {
+      id: createId(),
       originalText: text,
-      author: 'user',
+      author: 'counterparty',
       timestamp: Date.now(),
       analysis: null,
-      responses: undefined,
     };
-
-    addMessage(newMessage);
+    const previousMessages = currentSession?.messages ?? [];
+    appendMessage(incomingMessage);
+    setIsAnalyzing(true);
+    setErrorMessage(null);
 
     try {
-      const rawAnalysis = await analyzeMessage(text);
-      const adaptedAnalysis = adaptAnalysisForGoal(rawAnalysis, 'defensive');
-      const generatedResponses = await generateResponses({
-        goal: 'defensive',
-        analysisResult: adaptedAnalysis,
+      const result = await analyzeDialogue({
+        goal: currentGoal,
+        incomingMessage: text,
+        history: previousMessages,
       });
-
-      setAnalysis(adaptedAnalysis);
-      setResponses(generatedResponses);
-
-      const updatedFields = {
-        analysis: adaptedAnalysis,
-        responses: generatedResponses,
-      };
-
-      updateMessage(newMessage.id, updatedFields);
-    } catch (err) {
-      console.error(err);
+      updateMessage(incomingMessage.id, { analysis: result.analysis });
+      setAnalysis(result.analysis);
+      setResponses(result.analysis.response_options);
+      setMode(result.mode);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Не удалось выполнить анализ.');
     } finally {
       setIsAnalyzing(false);
     }
   };
 
-  const handleSelectResponse = (response: string) => {
-    const newMessage: AnalysisMessage = {
-      id: uuidv4(),
-      originalText: response,
-      author: 'assistant',
+  const handleSelectResponse = (response: ResponseOption) => {
+    const selectedMessage: AnalysisMessage = {
+      id: createId(),
+      originalText: response.text,
+      author: 'user',
       timestamp: Date.now(),
       analysis: null,
-      responses: undefined,
+      selectedResponse: response.id,
     };
-    addMessage(newMessage);
+    appendMessage(selectedMessage);
+  };
+
+  const requestPrivacyReview = () => {
+    const text = draft.trim();
+    if (!text || isAnalyzing) return;
+
+    const prepared = prepareDialogueForAnalysis({
+      goal: currentGoal,
+      incomingMessage: text,
+      history: currentSession?.messages ?? [],
+    });
+    setPendingSubmission({
+      text,
+      preview: prepared.value.incomingMessage,
+      totalRedactions: prepared.totalRedactions,
+      redactionDetails: describeRedactions(prepared.redactions),
+    });
+  };
+
+  const confirmPrivacyReview = () => {
+    if (!pendingSubmission) return;
+    const { text } = pendingSubmission;
+    setPendingSubmission(null);
+    setDraft('');
+    void handleSendMessage(text);
+  };
+
+  const handleDeleteAll = () => {
+    const confirmed = window.confirm('Удалить все диалоги с этого устройства? Восстановить тексты после удаления нельзя.');
+    if (!confirmed) return;
+    clearAllDialogs();
+    setAnalysis(null);
+    setResponses([]);
+    setMode(null);
+    setErrorMessage(null);
   };
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages.length]);
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [currentSession?.messages.length, isAnalyzing]);
 
   return (
-    <div className="flex h-screen flex-col bg-neutral-100 dark:bg-neutral-900">
+    <div className="flex min-h-screen flex-col bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
       <HeaderBar />
-      <div className="grid flex-1 grid-cols-[320px_1fr_480px] gap-3 p-3">
-        {/* Sidebar */}
-        <aside className="flex flex-col gap-3 rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-950">
-          <div className="animate-fadeIn duration-300">
-            <DialogSidebar />
-          </div>
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 p-2 lg:grid-cols-[250px_minmax(0,1fr)_370px] lg:p-3">
+        <aside className="order-2 flex min-w-0 flex-col gap-3 lg:order-1">
+          <DialogSidebar
+            messageCount={currentSession?.messages.length ?? 0}
+            sessionCount={sessions.length}
+            onDeleteAll={handleDeleteAll}
+          />
+          <button
+            type="button"
+            onClick={() => createNewSession()}
+            className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-800 transition hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950/60 dark:text-blue-200"
+          >
+            + Новый диалог
+          </button>
+          <button
+            type="button"
+            onClick={clearCurrentSession}
+            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+          >
+            Очистить текущий диалог
+          </button>
         </aside>
 
-        {/* Main Chat */}
-        <main className="flex flex-col gap-3 rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-950">
-          <div className="flex-1 overflow-y-auto">
-            <Card className="h-full px-3 py-2 overflow-y-auto space-y-3">
-              {messages.map((msg) => (
-                <ChatMessage key={msg.id} message={msg} />
-              ))}
+        <main className="order-1 flex min-h-[58vh] min-w-0 flex-col gap-3 rounded-xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:order-2 lg:min-h-0 lg:p-3">
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <Card className="min-h-full space-y-3 overflow-y-auto bg-slate-50 px-2 py-3 dark:bg-slate-950/50">
+              {currentSession?.messages.length ? (
+                currentSession.messages.map((message) => <ChatMessage key={message.id} message={message} />)
+              ) : (
+                <div className="flex min-h-[300px] items-center justify-center px-6 text-center text-sm text-slate-500">
+                  Вставьте новое сообщение банка или коллектора. BCOP учтёт историю диалога и выбранную цель.
+                </div>
+              )}
+              {isAnalyzing && (
+                <div className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-sm text-blue-800 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-200" aria-live="polite">
+                  Анализирую новое сообщение с учётом истории…
+                </div>
+              )}
               <div ref={chatEndRef} />
             </Card>
           </div>
-          <MessageInput onSendMessage={handleSendMessage} disabled={isAnalyzing} />
+          <MessageInput
+            value={draft}
+            onChange={setDraft}
+            onSendMessage={requestPrivacyReview}
+            disabled={isAnalyzing || Boolean(pendingSubmission)}
+          />
         </main>
 
-        {/* Analysis Panel */}
-        <aside className="flex flex-col gap-3 rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-950">
-          <div className="animate-fadeIn duration-300">
-            <ControlPanel analysis={adaptAnalysisForControlPanel(analysis)} isAnalyzing={isAnalyzing} />
-            <ResponseSelect responses={responses} onSelectResponse={handleSelectResponse} />
-          </div>
+        <aside className="order-3 flex min-w-0 flex-col gap-3">
+          <ControlPanel analysis={analysis} isAnalyzing={isAnalyzing} mode={mode} />
+          <ResponseSelect responses={responses} onSelectResponse={handleSelectResponse} />
+          {errorMessage && (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/30 dark:text-red-200" role="alert">
+              {errorMessage}
+            </div>
+          )}
+          <p className="px-1 text-xs leading-5 text-slate-500">
+            Варианты ответа — черновики. Перед отправкой проверьте факты, документы и тональность.
+          </p>
         </aside>
       </div>
+      {pendingSubmission && (
+        <PrivacyReviewDialog
+          preview={pendingSubmission.preview}
+          totalRedactions={pendingSubmission.totalRedactions}
+          redactionDetails={pendingSubmission.redactionDetails}
+          onCancel={() => setPendingSubmission(null)}
+          onConfirm={confirmPrivacyReview}
+        />
+      )}
     </div>
   );
 }

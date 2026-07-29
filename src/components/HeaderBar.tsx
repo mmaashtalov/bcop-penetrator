@@ -1,35 +1,36 @@
 import React, { useEffect } from 'react';
-import { ShieldCheckIcon, CpuChipIcon, WifiIcon, ComputerDesktopIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { ShieldCheckIcon, WifiIcon } from '@heroicons/react/24/outline';
 import { useSystem } from '../store/systemStore';
 
 export default function HeaderBar() {
   const { online, lastUpdate, ping, setOnline } = useSystem();
+
   useEffect(() => {
-    const i = window.setInterval(ping, 30000);
-    window.addEventListener('online', () => setOnline(true));
-    window.addEventListener('offline', () => setOnline(false));
-    return () => window.clearInterval(i);
+    const interval = window.setInterval(ping, 30_000);
+    const handleOnline = () => setOnline(true);
+    const handleOffline = () => setOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
   }, [ping, setOnline]);
+
   return (
-    <header className="flex items-center justify-between h-14 px-3 shadow bg-[#3178C6] text-white">
-      <div className="flex items-center space-x-3">
-        <ShieldCheckIcon className="h-8 w-8" />
-        <CpuChipIcon className="h-8 w-8" />
-        <div className="ml-2">
-          <h1 className="text-xl font-bold">Bank Chat Operator Penetrator</h1>
-          <h2 className="text-xs opacity-80">Tactical Analysis & Response Generation Platform</h2>
+    <header className="flex min-h-14 items-center justify-between gap-3 bg-slate-900 px-3 py-2 text-white shadow-lg sm:px-4">
+      <div className="flex min-w-0 items-center gap-2">
+        <ShieldCheckIcon className="h-7 w-7 shrink-0 text-blue-300" />
+        <div className="min-w-0">
+          <h1 className="truncate text-base font-bold sm:text-lg">BCOP Dialogue Core</h1>
+          <p className="hidden text-xs text-slate-300 sm:block">Помощник для последовательного диалога с банком или коллектором</p>
         </div>
       </div>
-      <div className="flex items-center space-x-3">
-        <WifiIcon className="h-5 w-5 text-green-400" />
-        <span className="text-sm font-medium">{online ? 'Online' : 'Offline'}</span>
-        <span className="text-xs opacity-70">• Live Updated {lastUpdate}</span>
-        <div className="h-6 border-l border-white/40 ml-2" />
-        <button className="flex items-center space-x-1 text-sm">
-          <ComputerDesktopIcon className="h-5 w-5" />
-          <span>System</span>
-          <ChevronDownIcon className="h-4 w-4" />
-        </button>
+      <div className="flex shrink-0 items-center gap-1.5 text-xs text-slate-300 sm:gap-2">
+        <WifiIcon className={online ? 'h-4 w-4 text-emerald-400' : 'h-4 w-4 text-red-400'} />
+        <span>{online ? 'Онлайн' : 'Офлайн'}</span>
+        <span className="hidden text-slate-500 sm:inline">· {lastUpdate}</span>
       </div>
     </header>
   );

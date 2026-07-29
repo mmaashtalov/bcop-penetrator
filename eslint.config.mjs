@@ -7,7 +7,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 export default [
   js.configs.recommended,
   {
-    ignores: ['dist/**', 'node_modules/**', '*.config.js', '.env*'],
+    ignores: ['dist/**', 'dist-public-demo/**', 'node_modules/**', '*.config.js', 'vite.config.ts', '.env*'],
   },
   {
     files: ['**/*.{ts,tsx}'],
@@ -47,7 +47,7 @@ export default [
         args: 'after-used',
         ignoreRestSiblings: true,
         varsIgnorePattern: '^_',
-        argsIgnorePattern: '^_'
+        argsIgnorePattern: '^_',
       }],
       '@typescript-eslint/no-empty-object-type': 'off',
       'react-hooks/rules-of-hooks': 'error',
@@ -68,4 +68,19 @@ export default [
       },
     },
   },
-]; 
+  {
+    files: ['server/**/*.mjs', 'scripts/**/*.mjs'],
+    languageOptions: {
+      globals: {
+        AbortController: 'readonly',
+        Buffer: 'readonly',
+        URL: 'readonly',
+        clearTimeout: 'readonly',
+        console: 'readonly',
+        fetch: 'readonly',
+        process: 'readonly',
+        setTimeout: 'readonly',
+      },
+    },
+  },
+];

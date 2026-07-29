@@ -1,22 +1,51 @@
-import { SYSTEM_PROMPT_ANALYSIS } from '../prompts/systemPrompt';
-import { callGPTWithSystem } from '../lib/openai';
-import { AnalysisResult } from '../types/response';
+import { AnalyzeDialogueRequest, AnalyzeDialogueResponse } from '../types/response';
+import { prepareDialogueForAnalysis } from '../lib/anonymizer';
 
-export async function analyzeMessage(text: string): Promise<AnalysisResult> {
-  const userPrompt = SYSTEM_PROMPT_ANALYSIS.replace(
-    '[ВСТАВЬ СЮДА ОДНО ИЛИ НЕСКОЛЬКО СООБЩЕНИЙ СО СТОРОНЫ ОПЕРАТОРА]',
-    text
-  );
+const API_URL = '/api/dialogue/analyze';
 
-  const raw = await callGPTWithSystem(
-    'Ты — аналитик банковских коммуникаций. Отвечай JSON-объектом.',
-    userPrompt,
-    { response_format: { type: 'json_object' } }
-  );
+export async function analyzeDialogue(
+  request: AnalyzeDialogueRequest,
+): Promise<AnalyzeDialogueResponse> {
+  const anonymized = prepareDialogueForAnalysis(request).value;
+  const history = anonymized.history.map(({ id, author, originalText, timestamp }) => ({
+    id,
+    author,
+    originalText,
+    timestamp,
+  }));
+  const response = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...anonymized, history }),
+  });
 
-  if (!raw) {
-    throw new Error('No response from OpenAI API');
+  let payload: unknown = null;
+  try {
+    payload = await response.json();
+  } catch {
+    throw new Error('Сервер вернул некорректный ответ.');
   }
 
-  return JSON.parse(raw) as AnalysisResult;
+  if (!response.ok) {
+    const message = typeof payload === 'object' && payload !== null && 'error' in payload
+      ? String(payload.error)
+      : 'Не удалось выполнить анализ.';
+    throw new Error(message);
+  }
+
+  if (!isAnalyzeResponse(payload)) {
+    throw new Error('Сервер вернул неполный результат анализа.');
+  }
+
+  return payload;
+}
+
+function isAnalyzeResponse(value: unknown): value is AnalyzeDialogueResponse {
+  if (typeof value !== 'object' || value === null) return false;
+  const candidate = value as Partial<AnalyzeDialogueResponse>;
+  return (candidate.mode === 'ai' || candidate.mode === 'demo')
+    && typeof candidate.request_id === 'string'
+    && typeof candidate.analysis === 'object'
+    && candidate.analysis !== null
+    && Array.isArray(candidate.analysis.response_options);
 }
