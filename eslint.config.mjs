@@ -7,7 +7,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 export default [
   js.configs.recommended,
   {
-    ignores: ['dist/**', 'node_modules/**', '*.config.js', 'vite.config.ts', '.env*'],
+    ignores: ['dist/**', 'dist-public-demo/**', 'node_modules/**', '*.config.js', 'vite.config.ts', '.env*'],
   },
   {
     files: ['**/*.{ts,tsx}'],
@@ -69,7 +69,7 @@ export default [
     },
   },
   {
-    files: ['server/**/*.mjs'],
+    files: ['server/**/*.mjs', 'scripts/**/*.mjs'],
     languageOptions: {
       globals: {
         AbortController: 'readonly',

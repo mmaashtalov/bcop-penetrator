@@ -7,6 +7,7 @@
     "dev": "vite",
     "dev:api": "node server/index.mjs",
     "build": "vite build",
+    "build:public-demo": "vite build --mode public-demo --outDir dist-public-demo",
     "start": "node server/index.mjs",
     "serve": "vite preview",
     "test": "node --test server/*.test.mjs",
@@ -14,6 +15,8 @@
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "typecheck": "tsc --noEmit",
     "smoke:api": "node server/http-smoke.mjs",
+    "verify:public-demo": "node scripts/verify-public-demo.mjs",
+    "check:public-demo": "pnpm build:public-demo && pnpm verify:public-demo",
     "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm build && pnpm smoke:api",
     "preview": "serve dist -l 3000"
   },
