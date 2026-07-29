@@ -31,7 +31,7 @@ export default function MessageInput({ onSendMessage, disabled }: MessageInputPr
         value={input}
         onChange={(e) => setInput((e.target as HTMLTextAreaElement).value)}
         onKeyPress={handleKeyPress}
-        placeholder="Введите сообщение..."
+        placeholder="Вставьте новое сообщение банка или коллектора…"
         className="min-h-[60px] w-full resize-none rounded-lg border border-neutral-300 bg-white p-3 pr-16 text-sm shadow-sm dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
         disabled={disabled}
       />
