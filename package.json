@@ -10,9 +10,11 @@
     "start": "node server/index.mjs",
     "serve": "vite preview",
     "test": "node --test server/*.test.mjs",
-    "check": "pnpm test && pnpm build",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "typecheck": "tsc --noEmit",
+    "smoke:api": "node server/http-smoke.mjs",
+    "check": "pnpm test && pnpm lint && pnpm typecheck && pnpm build && pnpm smoke:api",
     "preview": "serve dist -l 3000"
   },
   "keywords": [],

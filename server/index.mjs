@@ -101,8 +101,9 @@ function extractOutputText(body) {
 }
 
 async function requestOpenAI(context) {
+  if (DEMO_MODE) return { analysis: buildDemoAnalysis(context), mode: 'demo' };
+
   if (!OPENAI_API_KEY) {
-    if (DEMO_MODE) return { analysis: buildDemoAnalysis(context), mode: 'demo' };
     const error = new Error('OPENAI_API_KEY is not configured');
     error.status = 503;
     throw error;
@@ -237,7 +238,7 @@ export function createAppServer() {
 
     const pathname = new URL(request.url, 'http://localhost').pathname;
     if (pathname === '/api/health' && request.method === 'GET') {
-      sendJson(response, request, 200, { ok: true, service: 'bcop-dialogue-core', mode: OPENAI_API_KEY ? 'ai' : DEMO_MODE ? 'demo' : 'unconfigured' });
+      sendJson(response, request, 200, { ok: true, service: 'bcop-dialogue-core', mode: DEMO_MODE ? 'demo' : OPENAI_API_KEY ? 'ai' : 'unconfigured' });
       return;
     }
     if (pathname === '/api/dialogue/analyze' && request.method === 'POST') {
@@ -259,7 +260,7 @@ export function createAppServer() {
 export function startServer() {
   const server = createAppServer();
   server.listen(PORT, '0.0.0.0', () => {
-    console.log(`BCOP server listening on ${PORT} (${OPENAI_API_KEY ? 'ai' : DEMO_MODE ? 'demo' : 'unconfigured'} mode)`);
+    console.log(`BCOP server listening on ${PORT} (${DEMO_MODE ? 'demo' : OPENAI_API_KEY ? 'ai' : 'unconfigured'} mode)`);
   });
   return server;
 }

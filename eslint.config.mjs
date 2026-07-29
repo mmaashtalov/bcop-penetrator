@@ -47,7 +47,7 @@ export default [
         args: 'after-used',
         ignoreRestSiblings: true,
         varsIgnorePattern: '^_',
-        argsIgnorePattern: '^_'
+        argsIgnorePattern: '^_',
       }],
       '@typescript-eslint/no-empty-object-type': 'off',
       'react-hooks/rules-of-hooks': 'error',
