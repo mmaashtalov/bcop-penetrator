@@ -1,130 +1,381 @@
 import { useMemo, useState } from 'react';
-import { InformationCircleIcon, LockClosedIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
-import type { AnalysisMessage, ResponseOption } from '../types/response';
+import {
+  ArrowRightIcon,
+  CheckCircleIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  ClockIcon,
+  DocumentMagnifyingGlassIcon,
+  ExclamationTriangleIcon,
+  InformationCircleIcon,
+  LockClosedIcon,
+  NoSymbolIcon,
+  ShieldCheckIcon,
+  SparklesIcon,
+} from '@heroicons/react/24/outline';
+import type { ResponseOption } from '../types/response';
 import { PUBLIC_DEMO_SCENARIOS } from '../demo/publicScenarios';
-import ControlPanel from './ControlPanel';
-import ChatMessage from './ChatMessage';
-import { Card } from './ui/Card';
 
-function PublicResponseOptions({ responses }: { responses: ResponseOption[] }) {
+const NEXT_STEP_LABELS = {
+  ask_for_documents: 'Запросить документы и основания',
+  set_boundary: 'Обозначить границы контакта',
+  buy_time: 'Взять паузу на проверку',
+  clarify: 'Уточнить обстоятельства',
+  pause_and_record: 'Сделать паузу и зафиксировать сообщение',
+} as const;
+
+const COUNTERPARTY_LABELS = {
+  bank: 'Банк',
+  collector: 'Коллектор',
+  unknown: 'Не определён',
+} as const;
+
+const RISK_LABELS = {
+  low: 'Низкий',
+  medium: 'Средний',
+  high: 'Высокий',
+} as const;
+
+const CONFIDENCE_LABELS = {
+  low: 'Низкая',
+  medium: 'Средняя',
+  high: 'Высокая',
+} as const;
+
+const RESPONSE_SHORT_LABELS: Record<ResponseOption['id'], string> = {
+  calm: 'Спокойно',
+  firm: 'Твёрдо',
+  documents: 'Документы',
+};
+
+const SCENARIO_VISUALS = {
+  'deadline-pressure': {
+    number: '01',
+    tone: 'coral',
+    Icon: ClockIcon,
+  },
+  'documents-request': {
+    number: '02',
+    tone: 'violet',
+    Icon: DocumentMagnifyingGlassIcon,
+  },
+  'contact-boundary': {
+    number: '03',
+    tone: 'teal',
+    Icon: NoSymbolIcon,
+  },
+} as const;
+
+function ResponsePanel({
+  responses,
+  selectedId,
+  onSelect,
+}: {
+  responses: ResponseOption[];
+  selectedId: ResponseOption['id'];
+  onSelect: (id: ResponseOption['id']) => void;
+}) {
+  const selectedResponse = responses.find((response) => response.id === selectedId) ?? responses[0];
+
   return (
-    <Card className="space-y-3 bg-white p-3 shadow-sm dark:bg-slate-900" role="region" aria-labelledby="public-demo-responses">
-      <div>
-        <h2 id="public-demo-responses" className="text-base font-semibold">Три безопасных черновика</h2>
-        <p className="mt-1 text-xs leading-5 text-slate-500">В публичной версии они только показывают механику: копирование, сохранение и отправка отключены.</p>
+    <aside className="demo-surface response-panel" aria-labelledby="public-demo-responses">
+      <div className="panel-heading">
+        <div className="panel-heading__icon panel-heading__icon--violet">
+          <SparklesIcon aria-hidden="true" />
+        </div>
+        <div>
+          <span className="panel-heading__eyebrow">Варианты ответа</span>
+          <h2 id="public-demo-responses">Выберите тон</h2>
+        </div>
       </div>
-      {responses.map((response) => (
-        <article key={response.id} className="space-y-2 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
-          <h3 className="font-semibold">{response.label}</h3>
-          <p className="whitespace-pre-wrap text-sm leading-6">{response.text}</p>
-          <p className="text-xs leading-5 text-slate-500">Зачем: {response.why}</p>
+
+      <div className="response-tabs" role="tablist" aria-label="Тон ответа">
+        {responses.map((response) => (
+          <button
+            key={response.id}
+            type="button"
+            role="tab"
+            aria-selected={response.id === selectedId}
+            className={response.id === selectedId ? 'response-tab is-active' : 'response-tab'}
+            onClick={() => onSelect(response.id)}
+          >
+            {RESPONSE_SHORT_LABELS[response.id]}
+          </button>
+        ))}
+      </div>
+
+      {selectedResponse && (
+        <article className="response-draft" role="tabpanel">
+          <div className="response-draft__topline">
+            <span>Черновик ответа</span>
+            <span className="readonly-badge">read-only</span>
+          </div>
+          <p>{selectedResponse.text}</p>
         </article>
-      ))}
-    </Card>
+      )}
+
+      {selectedResponse && (
+        <div className="response-rationale">
+          <InformationCircleIcon aria-hidden="true" />
+          <div>
+            <strong>Почему это безопаснее</strong>
+            <p>{selectedResponse.why}</p>
+          </div>
+        </div>
+      )}
+
+      <div className="response-panel__footnote">
+        Копирование, сохранение и отправка отключены в публичном демо.
+      </div>
+    </aside>
   );
 }
 
 export default function PublicDemoDashboard() {
   const [scenarioId, setScenarioId] = useState(PUBLIC_DEMO_SCENARIOS[0].id);
+  const [selectedResponseId, setSelectedResponseId] = useState<ResponseOption['id']>('calm');
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const scenario = useMemo(
     () => PUBLIC_DEMO_SCENARIOS.find((candidate) => candidate.id === scenarioId) ?? PUBLIC_DEMO_SCENARIOS[0],
     [scenarioId],
   );
-  const demoMessage = useMemo<AnalysisMessage>(() => ({
-    id: `public-demo-${scenario.id}`,
-    timestamp: Date.UTC(2026, 0, 1, 10, 30),
-    author: 'counterparty',
-    originalText: scenario.incomingMessage,
-    analysis: scenario.analysis,
-  }), [scenario]);
+  const riskTone = scenario.analysis.risk_level;
+
+  const selectScenario = (id: string) => {
+    setScenarioId(id);
+    setSelectedResponseId('calm');
+    setDetailsOpen(false);
+  };
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-      <header className="border-b border-slate-800 bg-slate-900 px-3 py-3 text-white shadow-lg sm:px-4">
-        <div className="mx-auto flex max-w-7xl items-center gap-3">
-          <ShieldCheckIcon className="h-8 w-8 shrink-0 text-blue-300" aria-hidden="true" />
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wide text-blue-200">Публичное read-only демо</p>
-            <h1 className="truncate text-lg font-bold sm:text-xl">BCOP Dialogue Core</h1>
+    <div className="public-demo">
+      <div className="ambient ambient--violet" aria-hidden="true" />
+      <div className="ambient ambient--cyan" aria-hidden="true" />
+
+      <header className="demo-header">
+        <div className="demo-container">
+          <div className="brandbar">
+            <div className="brand">
+              <span className="brand__mark">
+                <ShieldCheckIcon aria-hidden="true" />
+              </span>
+              <span className="brand__name">
+                <strong>BCOP</strong>
+                <small>Dialogue Core</small>
+              </span>
+            </div>
+            <div className="privacy-pill">
+              <LockClosedIcon aria-hidden="true" />
+              <span>Без передачи данных</span>
+            </div>
+          </div>
+
+          <div className="hero">
+            <div className="hero__copy">
+              <div className="demo-kicker">
+                <span aria-hidden="true" />
+                Публичное read-only демо
+              </div>
+              <h1>
+                Понимай давление.
+                <span>Отвечай по фактам.</span>
+              </h1>
+              <p className="hero__lead">
+                BCOP выделяет тактики собеседника, показывает риск и предлагает следующий безопасный шаг — без догадок и лишних обещаний.
+              </p>
+              <div className="hero__facts" aria-label="Возможности демо">
+                <span><CheckCircleIcon aria-hidden="true" />3 ситуации</span>
+                <span><CheckCircleIcon aria-hidden="true" />3 тона ответа</span>
+                <span><CheckCircleIcon aria-hidden="true" />Без регистрации</span>
+              </div>
+            </div>
+
+            <div className="safety-card">
+              <div className="safety-card__icon">
+                <ShieldCheckIcon aria-hidden="true" />
+              </div>
+              <div>
+                <span>Безопасный контур</span>
+                <strong>Ничего не уходит с устройства</strong>
+                <p>В демо нет поля ввода, API, сохранения истории или внешних запросов.</p>
+              </div>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl space-y-3 p-3 sm:p-4">
-        <section className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm leading-6 text-blue-950 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-100" role="alert">
-          <div className="flex items-start gap-2">
-            <LockClosedIcon className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
-            <p><strong>Только вымышленные сценарии.</strong> Здесь нет формы ввода, хранения или отправки переписки: это статическая демонстрация интерфейса и логики результата.</p>
+      <main className="demo-container demo-main">
+        <section className="scenario-picker" aria-labelledby="scenario-picker-title">
+          <div className="section-intro">
+            <div>
+              <span className="section-intro__number">01</span>
+              <div>
+                <h2 id="scenario-picker-title">Выберите ситуацию</h2>
+                <p>Результат перестроится мгновенно.</p>
+              </div>
+            </div>
+            <span className="scenario-counter">{PUBLIC_DEMO_SCENARIOS.findIndex((item) => item.id === scenario.id) + 1} / {PUBLIC_DEMO_SCENARIOS.length}</span>
+          </div>
+
+          <div className="scenario-picker__list" role="list">
+            {PUBLIC_DEMO_SCENARIOS.map((candidate) => {
+              const active = candidate.id === scenario.id;
+              const visual = SCENARIO_VISUALS[candidate.id as keyof typeof SCENARIO_VISUALS] ?? SCENARIO_VISUALS['deadline-pressure'];
+              const ScenarioIcon = visual.Icon;
+              return (
+                <button
+                  key={candidate.id}
+                  type="button"
+                  onClick={() => selectScenario(candidate.id)}
+                  className={active ? 'scenario-card is-active' : 'scenario-card'}
+                  data-tone={visual.tone}
+                  aria-pressed={active}
+                >
+                  <span className="scenario-card__icon"><ScenarioIcon aria-hidden="true" /></span>
+                  <span className="scenario-card__copy">
+                    <span className="scenario-card__number">{visual.number}</span>
+                    <strong>{candidate.title}</strong>
+                    <small>{candidate.description}</small>
+                  </span>
+                  {active && <CheckCircleIcon className="scenario-card__check" aria-hidden="true" />}
+                </button>
+              );
+            })}
           </div>
         </section>
 
-        <section className="grid gap-3 lg:grid-cols-[250px_minmax(0,1fr)_370px]">
-          <aside className="order-1 space-y-3 lg:order-none" aria-label="Выбор сценария">
-            <Card className="space-y-3 bg-white p-3 shadow-sm dark:bg-slate-900">
-              <div>
-                <h2 className="text-base font-semibold">Сценарии демо</h2>
-                <p className="mt-1 text-xs leading-5 text-slate-500">Выберите один из трёх безопасных примеров.</p>
+        <div className="workspace">
+          <div className="workspace__analysis">
+            <section className="demo-surface message-panel" aria-labelledby="demo-dialogue-title">
+              <div className="panel-heading panel-heading--spread">
+                <div className="panel-heading__cluster">
+                  <div className="panel-heading__icon panel-heading__icon--cyan">
+                    <ArrowRightIcon aria-hidden="true" />
+                  </div>
+                  <div>
+                    <span className="panel-heading__eyebrow">Входящее сообщение</span>
+                    <h2 id="demo-dialogue-title">{scenario.title}</h2>
+                  </div>
+                </div>
+                <span className="fiction-badge">Вымышленный кейс</span>
               </div>
-              <div className="space-y-2" role="list">
-                {PUBLIC_DEMO_SCENARIOS.map((candidate) => {
-                  const active = candidate.id === scenario.id;
-                  return (
-                    <button
-                      key={candidate.id}
-                      type="button"
-                      onClick={() => setScenarioId(candidate.id)}
-                      className={`w-full rounded-lg border p-3 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${active
-                        ? 'border-blue-500 bg-blue-50 text-blue-950 dark:border-blue-400 dark:bg-blue-950/50 dark:text-blue-100'
-                        : 'border-slate-200 bg-white hover:border-blue-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-blue-700 dark:hover:bg-slate-800'
-                      }`}
-                      aria-pressed={active}
-                    >
-                      <span className="block text-sm font-semibold">{candidate.title}</span>
-                      <span className="mt-1 block text-xs leading-5 opacity-80">{candidate.description}</span>
-                    </button>
-                  );
-                })}
+
+              <div className="message-stage">
+                <div className="counterparty-avatar" aria-hidden="true">
+                  {COUNTERPARTY_LABELS[scenario.analysis.counterparty_type].slice(0, 1)}
+                </div>
+                <div className="message-stack">
+                  <div className="message-meta">
+                    <strong>{COUNTERPARTY_LABELS[scenario.analysis.counterparty_type]}</strong>
+                    <span>10:30</span>
+                  </div>
+                  <div className="message-bubble">
+                    <p>{scenario.incomingMessage}</p>
+                  </div>
+                  <span className="message-processed"><SparklesIcon aria-hidden="true" />Разобрано BCOP</span>
+                </div>
               </div>
-            </Card>
+            </section>
 
-            <Card className="space-y-2 bg-white p-3 text-xs leading-5 text-slate-600 shadow-sm dark:bg-slate-900 dark:text-slate-300">
-              <div className="flex items-center gap-2 font-semibold text-slate-900 dark:text-slate-100">
-                <InformationCircleIcon className="h-4 w-4" aria-hidden="true" />
-                Как читать демо
+            <section className="demo-surface analysis-panel" aria-labelledby="analysis-title">
+              <div className="panel-heading">
+                <div className="panel-heading__icon panel-heading__icon--coral">
+                  <ExclamationTriangleIcon aria-hidden="true" />
+                </div>
+                <div>
+                  <span className="panel-heading__eyebrow">Разбор ситуации</span>
+                  <h2 id="analysis-title">{scenario.analysis.message_summary}</h2>
+                </div>
               </div>
-              <p>Слева — цель и пример сообщения. Справа — выделенные наблюдаемые признаки и безопасные варианты следующего ответа.</p>
-              <p>Уверенность намеренно низкая: по одному сообщению нельзя устанавливать юридические факты.</p>
-            </Card>
-          </aside>
 
-          <section className="order-2 flex min-h-[460px] flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900" aria-labelledby="demo-dialogue-title">
-            <div className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-100 pb-3 dark:border-slate-800">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-300">Цель: {scenario.goalLabel}</p>
-                <h2 id="demo-dialogue-title" className="mt-1 text-lg font-bold">{scenario.title}</h2>
+              <div className="analysis-stats">
+                <div className="analysis-stat" data-risk={riskTone}>
+                  <span>Уровень риска</span>
+                  <strong><i aria-hidden="true" />{RISK_LABELS[scenario.analysis.risk_level]}</strong>
+                  <small>{scenario.analysis.pressure_signals.length} сигнал(а) давления</small>
+                </div>
+                <div className="analysis-stat analysis-stat--alignment">
+                  <span>Цель: {scenario.goalLabel}</span>
+                  <strong>{scenario.analysis.goal_alignment}%</strong>
+                  <div className="alignment-track" aria-hidden="true">
+                    <span style={{ width: `${scenario.analysis.goal_alignment}%` }} />
+                  </div>
+                </div>
               </div>
-              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">ДАННЫЕ ВЫМЫШЛЕНЫ</span>
-            </div>
 
-            <div className="flex flex-1 items-center rounded-xl bg-slate-50 p-3 dark:bg-slate-950/40">
-              <div className="w-full">
-                <ChatMessage message={demoMessage} />
+              <div className="next-action">
+                <div className="next-action__number">01</div>
+                <div>
+                  <span>Рекомендуемый следующий шаг</span>
+                  <strong>{NEXT_STEP_LABELS[scenario.analysis.recommended_next_step]}</strong>
+                  <p>{scenario.analysis.dialogue_state}</p>
+                </div>
+                <ArrowRightIcon aria-hidden="true" />
               </div>
-            </div>
 
-            <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-3 text-sm leading-6 text-slate-600 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-300">
-              В этой публичной версии поле ввода и отправка намеренно отключены. Реальные сообщения, пароли, коды из SMS и реквизиты сюда вводить не нужно и невозможно.
-            </div>
-          </section>
+              <div className="signals">
+                <span className="signals__label">Что заметила система</span>
+                <div>
+                  {scenario.analysis.detected_tactics.map((tactic) => (
+                    <span className="signal-chip signal-chip--violet" key={tactic}>{tactic}</span>
+                  ))}
+                  {scenario.analysis.pressure_signals.map((signal) => (
+                    <span className="signal-chip signal-chip--coral" key={signal}>{signal}</span>
+                  ))}
+                </div>
+              </div>
 
-          <aside className="order-3 space-y-3" aria-label="Результат демонстрации">
-            <ControlPanel analysis={scenario.analysis} isAnalyzing={false} mode="demo" />
-            <PublicResponseOptions responses={scenario.analysis.response_options} />
-          </aside>
+              <button
+                type="button"
+                className="details-toggle"
+                onClick={() => setDetailsOpen((value) => !value)}
+                aria-expanded={detailsOpen}
+              >
+                <span>
+                  <InformationCircleIcon aria-hidden="true" />
+                  Методика и ограничения
+                </span>
+                {detailsOpen ? <ChevronUpIcon aria-hidden="true" /> : <ChevronDownIcon aria-hidden="true" />}
+              </button>
+
+              {detailsOpen && (
+                <div className="analysis-details">
+                  <div>
+                    <strong>Что уточнить</strong>
+                    <ul>
+                      {scenario.analysis.questions_to_clarify.map((question) => <li key={question}>{question}</li>)}
+                    </ul>
+                  </div>
+                  <div>
+                    <strong>Ограничения вывода</strong>
+                    <ul>
+                      {scenario.analysis.guardrails.map((guardrail) => <li key={guardrail}>{guardrail}</li>)}
+                    </ul>
+                  </div>
+                  <p>Уверенность оценки: <strong>{CONFIDENCE_LABELS[scenario.analysis.confidence].toLowerCase()}</strong>.</p>
+                </div>
+              )}
+            </section>
+          </div>
+
+          <ResponsePanel
+            responses={scenario.analysis.response_options}
+            selectedId={selectedResponseId}
+            onSelect={setSelectedResponseId}
+          />
+        </div>
+
+        <section className="privacy-note" role="note">
+          <div className="privacy-note__icon"><LockClosedIcon aria-hidden="true" /></div>
+          <div>
+            <strong>Только вымышленные сценарии.</strong>
+            <p>Здесь нет формы ввода, хранения или отправки переписки. Реальные сообщения, пароли, коды из SMS и реквизиты в этот контур не попадают.</p>
+          </div>
         </section>
 
-        <footer className="rounded-xl border border-slate-200 bg-white p-3 text-xs leading-5 text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
-          BCOP помогает структурировать следующий шаг в переписке. Он не устанавливает нарушение, не подтверждает долг и не заменяет проверку документов специалистом.
+        <footer className="demo-footer">
+          <span>BCOP Dialogue Core</span>
+          <p>Помогает структурировать следующий шаг, но не устанавливает нарушение, не подтверждает долг и не заменяет проверку документов специалистом.</p>
         </footer>
       </main>
     </div>
