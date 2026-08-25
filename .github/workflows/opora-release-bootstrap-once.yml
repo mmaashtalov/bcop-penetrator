@@ -1,0 +1,49 @@
+name: Publish Opora APK ONCE
+
+on:
+  push:
+    branches:
+      - codex/opora-release-bootstrap
+    paths:
+      - ".github/workflows/opora-release-bootstrap-once.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  publish-opora:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Download verified APK-only transfer
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://sdmntprdenmarkeast.oaiusercontent.com/files/00000000-f504-8210-bc5a-f63172264310/raw?se=2026-08-25T05%3A05%3A42Z&sp=r&sv=2026-02-06&sr=b&scid=a45c31ec-4d27-5fab-9c34-530bd4b30bd3&skoid=40ce4b34-a373-4a62-b0bf-44befe221915&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-08-25T04%3A43%3A08Z&ske=2026-08-26T04%3A43%3A08Z&sks=b&skv=2026-02-06&sig=U9nW3BHWfcvbD65/Mk0cwa5UeLV61EqZQUKH9/tkM5w%3D'
+          curl --fail --location --retry 3 "$URL" -o "$RUNNER_TEMP/opora-transfer.zip"
+          mkdir -p "$RUNNER_TEMP/opora-transfer"
+          unzip -q "$RUNNER_TEMP/opora-transfer.zip" -d "$RUNNER_TEMP/opora-transfer"
+          APK="$RUNNER_TEMP/opora-transfer/opora-0.3.6-informatory-pilot.apk"
+          test -s "$APK"
+          ACTUAL="$(sha256sum "$APK" | awk '{print $1}')"
+          test "$ACTUAL" = 'd87c3da36155174cc49f3d5e981b33d8d724dddb7dbfd3205de52795a4add6a6'
+      - name: Publish isolated opora-releases branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git checkout --orphan opora-releases
+          git rm -rf .
+          cp "$RUNNER_TEMP/opora-transfer/opora-0.3.6-informatory-pilot.apk" ./opora-0.3.6-informatory-pilot.apk
+          cp "$RUNNER_TEMP/opora-transfer/release-checks.txt" ./release-checks.txt
+          cp "$RUNNER_TEMP/opora-transfer/certificate.txt" ./certificate.txt
+          cat > README.md <<'EOF'
+          # Opora Android releases
+
+          Isolated binary distribution branch for the «Опора» Android application.
+          Source code remains in the private service-navigator repository.
+          EOF
+          git add README.md opora-0.3.6-informatory-pilot.apk release-checks.txt certificate.txt
+          git commit -m 'release: Opora Android 0.3.6'
+          git push --force origin HEAD:opora-releases
